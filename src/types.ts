@@ -7,7 +7,41 @@ export type NavigationTab =
   | 'workspace'
   | 'evolution'
   | 'export'
-  | 'settings';
+  | 'settings'
+  | 'datasets'
+  | 'model_improvement'
+  | 'retrain';
+
+// Real ML experiment data types from Person A + D pipeline
+export interface ComparisonMetric {
+  method: 'random' | 'confidence' | 'labelless';
+  round: number;
+  budget: number;
+  total_images: number;
+  images_reviewed: number;
+  mAP50: number;
+  mAP50_95: number;
+  precision: number;
+  recall: number;
+}
+
+export interface EffortSummary {
+  method: string;
+  final_round: number;
+  total_images: number;
+  images_reviewed: number;
+  human_review_rate: number;
+  human_review_pct: number;
+  images_automatically_handled: number;
+  automation_pct: number;
+  effort_reduction_vs_baseline_pct: number;
+  images_saved_vs_baseline: number;
+  final_mAP50: number;
+  mAP50_gain: number;
+  mAP_gain_per_100_images: number;
+  human_hours_spent: number;
+  human_hours_saved_vs_baseline: number;
+}
 
 export type AnnotationStatus = 'auto_labeled' | 'human_reviewed' | 'pending' | 'rejected';
 

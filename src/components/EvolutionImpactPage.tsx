@@ -93,29 +93,29 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center py-2">
-            {/* 64% Effort Saved */}
+            {/* 47% Effort Saved */}
             <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-1">
               <div className="text-5xl sm:text-6xl font-black font-mono text-emerald-400">
-                64%
+                47%
               </div>
               <div className="text-sm font-bold uppercase tracking-wider text-zinc-200">
-                Human Effort Saved
+                Human Effort Saved vs Baselines
               </div>
               <p className="text-xs text-zinc-400">
-                Reduced annotation burden from 42.3h to 15.7h
+                Only 26.5% reviewed (265/1,000 imgs) vs 50.0% (500 imgs) in Random & Confidence
               </p>
             </div>
 
-            {/* 98% Baseline Quality */}
+            {/* Superior Model Quality */}
             <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-1">
               <div className="text-5xl sm:text-6xl font-black font-mono text-blue-400">
-                98%
+                78.2%
               </div>
               <div className="text-sm font-bold uppercase tracking-wider text-zinc-200">
-                Baseline Model Quality Retained
+                Final mAP@50 Achieved
               </div>
               <p className="text-xs text-zinc-400">
-                87% mAP vs 88% full manual ground-truth upper bound
+                Outperforms Confidence (73.5%) & Random (63.5%) with half the human review
               </p>
             </div>
           </div>
@@ -302,7 +302,7 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
           <div className="space-y-4 p-4 rounded-xl bg-zinc-950/70 border border-zinc-800">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
-                Human Annotation Effort Required
+                Human Review Ratio (% of Dataset)
               </span>
               <span className="text-[10px] text-emerald-400 font-bold">Lower is better</span>
             </div>
@@ -311,8 +311,8 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               {/* Full Manual */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Full 100% Manual Annotation</span>
-                  <span className="font-mono font-bold text-zinc-300">100%</span>
+                  <span>Full Manual Baseline</span>
+                  <span className="font-mono font-bold text-zinc-300">100.0% (1,000 imgs)</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
                   <div className="h-full bg-zinc-500 rounded-full w-[100%]"></div>
@@ -323,32 +323,32 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
                   <span>Random Batch Sampling</span>
-                  <span className="font-mono font-bold text-zinc-300">68%</span>
+                  <span className="font-mono font-bold text-zinc-300">50.0% (500 imgs)</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-600 rounded-full w-[68%]"></div>
+                  <div className="h-full bg-amber-600 rounded-full w-[50%]"></div>
                 </div>
               </div>
 
               {/* Confidence Only */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Naive Confidence Threshold Only</span>
-                  <span className="font-mono font-bold text-zinc-300">52%</span>
+                  <span>Confidence-Only Thresholding</span>
+                  <span className="font-mono font-bold text-zinc-300">50.0% (500 imgs)</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full w-[52%]"></div>
+                  <div className="h-full bg-blue-600 rounded-full w-[50%]"></div>
                 </div>
               </div>
 
               {/* LabelLess AI */}
               <div className="space-y-1 pt-1 border-t border-zinc-800">
                 <div className="flex justify-between text-xs font-bold text-emerald-400">
-                  <span>LABELLESS AI (Active Routing)</span>
-                  <span className="font-mono text-sm">36% (64% Saved)</span>
+                  <span>LABELLESS AI (Active Triaging)</span>
+                  <span className="font-mono text-sm">26.5% (265 imgs — 47% Saved)</span>
                 </div>
                 <div className="h-3.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-400 rounded-full w-[36%] shadow-lg shadow-emerald-400/30"></div>
+                  <div className="h-full bg-emerald-400 rounded-full w-[26.5%] shadow-lg shadow-emerald-400/30"></div>
                 </div>
               </div>
             </div>
@@ -364,47 +364,36 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
             </div>
 
             <div className="space-y-3">
-              {/* Full Manual */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Full Manual Ground Truth (Upper Bound)</span>
-                  <span className="font-mono font-bold text-zinc-300">88.0%</span>
-                </div>
-                <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-zinc-500 rounded-full w-[88%]"></div>
-                </div>
-              </div>
-
               {/* Random Sampling */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Random Batch Sampling</span>
-                  <span className="font-mono font-bold text-zinc-300">84.0%</span>
+                  <span>Random Batch Sampling (500 imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">63.5%</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-600 rounded-full w-[84%]"></div>
+                  <div className="h-full bg-amber-600 rounded-full w-[63.5%]"></div>
                 </div>
               </div>
 
               {/* Confidence Only */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Naive Confidence Threshold Only</span>
-                  <span className="font-mono font-bold text-zinc-300">85.0%</span>
+                  <span>Confidence-Only Thresholding (500 imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">73.5%</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full w-[85%]"></div>
+                  <div className="h-full bg-blue-600 rounded-full w-[73.5%]"></div>
                 </div>
               </div>
 
               {/* LabelLess AI */}
               <div className="space-y-1 pt-1 border-t border-zinc-800">
                 <div className="flex justify-between text-xs font-bold text-blue-400">
-                  <span>LABELLESS AI Active Pipeline</span>
-                  <span className="font-mono text-sm">87.0% (98% of upper bound)</span>
+                  <span>LABELLESS AI Active Pipeline (265 imgs)</span>
+                  <span className="font-mono text-sm">78.2% (+4.7% over Confidence)</span>
                 </div>
                 <div className="h-3.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-400 rounded-full w-[87%] shadow-lg shadow-blue-400/30"></div>
+                  <div className="h-full bg-blue-400 rounded-full w-[78.2%] shadow-lg shadow-blue-400/30"></div>
                 </div>
               </div>
             </div>

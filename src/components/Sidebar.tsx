@@ -58,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       group: 'IMPROVEMENT',
       items: [
-        { id: 'evolution', label: 'Model Impact & Experiments', icon: TrendingUp, badge: '64% Saved' },
+        { id: 'evolution', label: 'Model Impact & Experiments', icon: TrendingUp, badge: '47% Saved' },
       ],
     },
     {
@@ -143,8 +143,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-1 border-t border-zinc-800">
-            <span>mAP@50: <b className="text-zinc-200">86.4%</b></span>
-            <span>Effort: <b className="text-emerald-400">-64%</b></span>
+            <span>mAP@50: <b className="text-zinc-200">78.2%</b></span>
+            <span>Effort: <b className="text-emerald-400">-47%</b></span>
           </div>
         </div>
       </div>

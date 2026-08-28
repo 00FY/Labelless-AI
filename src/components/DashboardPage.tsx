@@ -38,15 +38,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [selectedRoundIndex, setSelectedRoundIndex] = useState(rounds.length - 1);
   const currentRound = rounds[selectedRoundIndex] || rounds[rounds.length - 1];
 
-  // Calculate dynamic stats
-  const totalImages = 10000;
-  const autoLabeled = 7420;
-  const humanReviewed = 1840;
-  const pendingReview = 740;
+  // Calculate dynamic stats from real ML experiment
+  const totalImages = 1000;
+  const autoLabeled = 735;
+  const humanReviewed = 265;
+  const pendingReview = datasetItems.filter((i) => i.status === 'pending').length;
 
-  const autoPct = ((autoLabeled / totalImages) * 100).toFixed(0);
-  const humanPct = ((humanReviewed / totalImages) * 100).toFixed(0);
-  const pendingPct = ((pendingReview / totalImages) * 100).toFixed(0);
+  const autoPct = ((autoLabeled / totalImages) * 100).toFixed(1);
+  const humanPct = ((humanReviewed / totalImages) * 100).toFixed(1);
+  const pendingPct = ((pendingReview / totalImages) * 100).toFixed(1);
 
   const pendingHighPriority = datasetItems.filter(
     (i) => i.status === 'pending' && (i.priorityLevel === 'critical' || i.priorityLevel === 'high')
@@ -106,8 +106,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="font-semibold uppercase tracking-wider">Total Images</span>
               <Database className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-white">10,000</div>
-            <p className="text-[11px] text-zinc-500">Disaster response imagery dataset</p>
+            <div className="text-3xl font-extrabold font-mono text-white">{totalImages.toLocaleString()}</div>
+            <p className="text-[11px] text-zinc-500">Disaster response active pool</p>
           </div>
 
           {/* Auto-labelled */}
@@ -119,8 +119,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="font-semibold uppercase tracking-wider">Auto-Labelled</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-emerald-400">7,420</div>
-            <p className="text-[11px] text-zinc-400">74.2% accepted (&gt;85% confidence)</p>
+            <div className="text-3xl font-extrabold font-mono text-emerald-400">{autoLabeled.toLocaleString()}</div>
+            <p className="text-[11px] text-zinc-400">{autoPct}% automatically pseudo-labeled</p>
           </div>
 
           {/* Human Reviewed */}
@@ -132,8 +132,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="font-semibold uppercase tracking-wider">Human Reviewed</span>
               <Users className="w-4 h-4 text-blue-400" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-blue-300">1,840</div>
-            <p className="text-[11px] text-zinc-400">18.4% targeted high-value corrections</p>
+            <div className="text-3xl font-extrabold font-mono text-blue-300">{humanReviewed.toLocaleString()}</div>
+            <p className="text-[11px] text-zinc-400">{humanPct}% targeted high-value reviews</p>
           </div>
 
           {/* Pending Review */}
@@ -145,8 +145,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="font-semibold uppercase tracking-wider">Pending Review</span>
               <Clock className="w-4 h-4 text-rose-400" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-rose-400">740</div>
-            <p className="text-[11px] text-zinc-400">7.4% in active learning priority queue</p>
+            <div className="text-3xl font-extrabold font-mono text-rose-400">{pendingReview}</div>
+            <p className="text-[11px] text-zinc-400">{pendingPct}% in active review queue</p>
           </div>
         </div>
       </section>
@@ -251,7 +251,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </h3>
               </div>
               <span className="text-xs font-bold font-mono text-emerald-400">
-                +15.2% Total Gain
+                +40.2% Total Gain (38.0% → 78.2%)
               </span>
             </div>
             <p className="text-xs text-zinc-400">
@@ -271,21 +271,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <line x1="30" y1="120" x2="390" y2="120" stroke="#27272a" strokeDasharray="3 3" strokeWidth="0.8" />
 
                 {/* Y-axis labels */}
-                <text x="5" y="18" fill="#a1a1aa" fontSize="9" fontFamily="monospace">90%</text>
-                <text x="5" y="53" fill="#a1a1aa" fontSize="9" fontFamily="monospace">85%</text>
-                <text x="5" y="88" fill="#a1a1aa" fontSize="9" fontFamily="monospace">80%</text>
-                <text x="5" y="123" fill="#a1a1aa" fontSize="9" fontFamily="monospace">70%</text>
+                <text x="5" y="18" fill="#a1a1aa" fontSize="9" fontFamily="monospace">80%</text>
+                <text x="5" y="53" fill="#a1a1aa" fontSize="9" fontFamily="monospace">65%</text>
+                <text x="5" y="88" fill="#a1a1aa" fontSize="9" fontFamily="monospace">50%</text>
+                <text x="5" y="123" fill="#a1a1aa" fontSize="9" fontFamily="monospace">35%</text>
 
                 {/* Shaded Area under curve */}
                 <path
-                  d="M 60 115 L 140 80 L 240 55 L 340 32 L 340 130 L 60 130 Z"
+                  d="M 50 115 L 120 78 L 190 54 L 260 40 L 330 32 L 330 130 L 50 130 Z"
                   fill="url(#gradMap)"
                   opacity="0.25"
                 />
 
                 {/* Main Curve Line */}
                 <path
-                  d="M 60 115 L 140 80 L 240 55 L 340 32"
+                  d="M 50 115 L 120 78 L 190 54 L 260 40 L 330 32"
                   fill="none"
                   stroke="#3b82f6"
                   strokeWidth="3.5"
@@ -294,16 +294,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 />
 
                 {/* Round Points */}
-                <circle cx="60" cy="115" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="140" cy="80" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="240" cy="55" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="340" cy="32" r="6" fill="#10B981" stroke="#34D399" strokeWidth="2.5" />
+                <circle cx="50" cy="115" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="120" cy="78" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="190" cy="54" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="260" cy="40" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="330" cy="32" r="6" fill="#10B981" stroke="#34D399" strokeWidth="2.5" />
 
                 {/* Point text */}
-                <text x="50" y="105" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">71.2%</text>
-                <text x="130" y="70" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">78.6%</text>
-                <text x="230" y="45" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">83.1%</text>
-                <text x="330" y="22" fill="#34D399" fontSize="11" fontWeight="bold" fontFamily="monospace">86.4%</text>
+                <text x="40" y="105" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">38.0%</text>
+                <text x="110" y="68" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">56.0%</text>
+                <text x="180" y="44" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">67.5%</text>
+                <text x="250" y="30" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">74.5%</text>
+                <text x="320" y="20" fill="#34D399" fontSize="11" fontWeight="bold" fontFamily="monospace">78.2%</text>
 
                 <defs>
                   <linearGradient id="gradMap" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -315,7 +317,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             {/* Rounds Selector Tabs */}
-            <div className="grid grid-cols-4 gap-2 pt-2">
+            <div className="grid grid-cols-5 gap-2 pt-2">
               {rounds.map((r, idx) => (
                 <button
                   key={r.round}
@@ -551,12 +553,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Without LabelLess (Full Manual):</span>
-              <span className="font-mono font-bold text-zinc-300">42.3 Hours</span>
+              <span className="text-zinc-400">Random / Confidence Baseline (50% review):</span>
+              <span className="font-mono font-bold text-zinc-300">3.47 Hours</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-blue-400 font-semibold">With LabelLess Active Pipeline:</span>
-              <span className="font-mono font-bold text-blue-400">15.7 Hours</span>
+              <span className="text-blue-400 font-semibold">With LabelLess Active Pipeline (26.5% review):</span>
+              <span className="font-mono font-bold text-blue-400">1.84 Hours</span>
             </div>
             <div className="h-px bg-zinc-800"></div>
             <div className="flex items-center justify-between text-sm font-bold">
@@ -564,7 +566,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <Check className="w-4 h-4" />
                 Net Time Saved:
               </span>
-              <span className="font-mono text-emerald-400 text-base">26.6 Hours Saved</span>
+              <span className="font-mono text-emerald-400 text-base">1.63 Hours Saved (47.0%)</span>
             </div>
           </div>
 
