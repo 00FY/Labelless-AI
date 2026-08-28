@@ -1,0 +1,145 @@
+{
+  "method": "labelless",
+  "ranked_images": [
+    {
+      "image_id": "06a18166c8062181c64920a7d4079c7b.png",
+      "priority_score": 0.958,
+      "uncertainty_score": 0.942,
+      "diversity_score": 0.885,
+      "rare_class_score": 0.91
+    },
+    {
+      "image_id": "0decc9d19b769d6d641eaba36653f802.png",
+      "priority_score": 0.941,
+      "uncertainty_score": 0.915,
+      "diversity_score": 0.852,
+      "rare_class_score": 0.89
+    },
+    {
+      "image_id": "03db54200069482ff87cab702a6be150.png",
+      "priority_score": 0.926,
+      "uncertainty_score": 0.89,
+      "diversity_score": 0.835,
+      "rare_class_score": 0.875
+    },
+    {
+      "image_id": "09e62858a678e6fcea8bced21d03ab1c.png",
+      "priority_score": 0.912,
+      "uncertainty_score": 0.878,
+      "diversity_score": 0.82,
+      "rare_class_score": 0.842
+    },
+    {
+      "image_id": "05cb25ff2685a29d0c7eafb3172015ce.png",
+      "priority_score": 0.895,
+      "uncertainty_score": 0.862,
+      "diversity_score": 0.795,
+      "rare_class_score": 0.81
+    },
+    {
+      "image_id": "02d76c270e3bd4c8a2cc3dfafba176c3.png",
+      "priority_score": 0.881,
+      "uncertainty_score": 0.845,
+      "diversity_score": 0.78,
+      "rare_class_score": 0.795
+    },
+    {
+      "image_id": "10320cb5d267aebe2e10727a211d859b.png",
+      "priority_score": 0.864,
+      "uncertainty_score": 0.83,
+      "diversity_score": 0.765,
+      "rare_class_score": 0.772
+    },
+    {
+      "image_id": "00f205aea57febc8e82d4e99a18b1d51.png",
+      "priority_score": 0.849,
+      "uncertainty_score": 0.815,
+      "diversity_score": 0.75,
+      "rare_class_score": 0.755
+    },
+    {
+      "image_id": "04ec74dcc27fa805a501fa352a059b50.png",
+      "priority_score": 0.833,
+      "uncertainty_score": 0.798,
+      "diversity_score": 0.738,
+      "rare_class_score": 0.74
+    },
+    {
+      "image_id": "13d9e2f6608abbc2f118eed034bde878.png",
+      "priority_score": 0.817,
+      "uncertainty_score": 0.78,
+      "diversity_score": 0.722,
+      "rare_class_score": 0.725
+    },
+    {
+      "image_id": "06f923fd6648f59b444c2188fbe0ef88.png",
+      "priority_score": 0.801,
+      "uncertainty_score": 0.765,
+      "diversity_score": 0.71,
+      "rare_class_score": 0.708
+    },
+    {
+      "image_id": "026da06805cf6612f6ea894a49c19465.png",
+      "priority_score": 0.785,
+      "uncertainty_score": 0.748,
+      "diversity_score": 0.695,
+      "rare_class_score": 0.69
+    },
+    {
+      "image_id": "0cc1d593cae6ffebfce45bf447fa6e69.png",
+      "priority_score": 0.768,
+      "uncertainty_score": 0.732,
+      "diversity_score": 0.68,
+      "rare_class_score": 0.672
+    },
+    {
+      "image_id": "0a7105c3b056fd88e3209f5aa70afc4c.png",
+      "priority_score": 0.752,
+      "uncertainty_score": 0.715,
+      "diversity_score": 0.665,
+      "rare_class_score": 0.655
+    },
+    {
+      "image_id": "0546c42ec775d0dba3b6f7bd2beeed2d.png",
+      "priority_score": 0.736,
+      "uncertainty_score": 0.698,
+      "diversity_score": 0.65,
+      "rare_class_score": 0.638
+    },
+    {
+      "image_id": "07985a5a543c820736007f857717ded2.png",
+      "priority_score": 0.719,
+      "uncertainty_score": 0.68,
+      "diversity_score": 0.635,
+      "rare_class_score": 0.62
+    },
+    {
+      "image_id": "0c80c7e390418a736c612dd3d0122d60.png",
+      "priority_score": 0.702,
+      "uncertainty_score": 0.662,
+      "diversity_score": 0.62,
+      "rare_class_score": 0.602
+    },
+    {
+      "image_id": "0d8d1b6cf3afb4b8d8a9299a798d4014.png",
+      "priority_score": 0.685,
+      "uncertainty_score": 0.645,
+      "diversity_score": 0.605,
+      "rare_class_score": 0.585
+    },
+    {
+      "image_id": "0de8fab7755fc8365e6acedc3081d3ba.png",
+      "priority_score": 0.668,
+      "uncertainty_score": 0.628,
+      "diversity_score": 0.59,
+      "rare_class_score": 0.568
+    },
+    {
+      "image_id": "0fb4fc4867bf8cd7ff23fbbd212886b5.png",
+      "priority_score": 0.651,
+      "uncertainty_score": 0.61,
+      "diversity_score": 0.575,
+      "rare_class_score": 0.55
+    }
+  ]
+}

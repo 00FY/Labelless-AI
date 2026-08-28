@@ -1,0 +1,147 @@
+{
+  "labels": [
+    {
+      "image_id": "00f205aea57febc8e82d4e99a18b1d51.png",
+      "action": "accept",
+      "boxes": [
+        {
+          "class_id": 1,
+          "class_name": "damagedbuilding",
+          "x": 30.5,
+          "y": 12.0,
+          "width": 25.0,
+          "height": 22.0,
+          "confidence": 0.88
+        },
+        {
+          "class_id": 1,
+          "class_name": "damagedbuilding",
+          "x": 65.0,
+          "y": 24.5,
+          "width": 18.0,
+          "height": 19.5,
+          "confidence": 0.86
+        },
+        {
+          "class_id": 0,
+          "class_name": "undamagedbuilding",
+          "x": 80.0,
+          "y": 18.0,
+          "width": 12.0,
+          "height": 15.0,
+          "confidence": 0.75
+        }
+      ]
+    },
+    {
+      "image_id": "03db54200069482ff87cab702a6be150.png",
+      "action": "accept",
+      "boxes": [
+        {
+          "class_id": 2,
+          "class_name": "fire",
+          "x": 42.0,
+          "y": 35.0,
+          "width": 15.5,
+          "height": 20.0,
+          "confidence": 0.91
+        },
+        {
+          "class_id": 3,
+          "class_name": "smoke",
+          "x": 38.0,
+          "y": 10.0,
+          "width": 35.0,
+          "height": 30.0,
+          "confidence": 0.89
+        },
+        {
+          "class_id": 1,
+          "class_name": "damagedbuilding",
+          "x": 40.0,
+          "y": 50.0,
+          "width": 22.0,
+          "height": 25.0,
+          "confidence": 0.82
+        }
+      ]
+    },
+    {
+      "image_id": "09e62858a678e6fcea8bced21d03ab1c.png",
+      "action": "correct",
+      "boxes": [
+        {
+          "class_id": 0,
+          "class_name": "undamagedbuilding",
+          "x": 12.0,
+          "y": 20.0,
+          "width": 28.0,
+          "height": 30.0,
+          "confidence": 1.0
+        },
+        {
+          "class_id": 1,
+          "class_name": "damagedbuilding",
+          "x": 55.0,
+          "y": 40.0,
+          "width": 32.0,
+          "height": 36.0,
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "image_id": "0cc1d593cae6ffebfce45bf447fa6e69.png",
+      "action": "accept",
+      "boxes": [
+        {
+          "class_id": 0,
+          "class_name": "undamagedbuilding",
+          "x": 18.0,
+          "y": 15.0,
+          "width": 22.0,
+          "height": 26.0,
+          "confidence": 0.85
+        },
+        {
+          "class_id": 0,
+          "class_name": "undamagedbuilding",
+          "x": 50.0,
+          "y": 12.0,
+          "width": 24.0,
+          "height": 28.0,
+          "confidence": 0.79
+        }
+      ]
+    },
+    {
+      "image_id": "0decc9d19b769d6d641eaba36653f802.png",
+      "action": "correct",
+      "boxes": [
+        {
+          "class_id": 2,
+          "class_name": "fire",
+          "x": 25.0,
+          "y": 45.0,
+          "width": 20.0,
+          "height": 22.0,
+          "confidence": 1.0
+        },
+        {
+          "class_id": 3,
+          "class_name": "smoke",
+          "x": 20.0,
+          "y": 15.0,
+          "width": 45.0,
+          "height": 35.0,
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "image_id": "10320cb5d267aebe2e10727a211d859b.png",
+      "action": "reject",
+      "boxes": []
+    }
+  ]
+}
