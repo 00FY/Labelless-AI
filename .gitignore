@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Ultralytics runs & logs
+runs/
+
+# Base pretrained weights (downloadable automatically)
+yolov8n.pt
+
+# Dataset folder (400MB raw imagery - download via dataset links)
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

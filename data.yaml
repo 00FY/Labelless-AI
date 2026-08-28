@@ -1,0 +1,9 @@
+path: /Users/rohan/Downloads/label-less-ai/data
+train: seed/images
+val: test/images
+
+names:
+  0: undamagedbuilding
+  1: damagedbuilding
+  2: fire
+  3: smoke
