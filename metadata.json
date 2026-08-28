@@ -1,0 +1,6 @@
+{
+  "name": "LabelLess AI",
+  "description": "Active-learning computer vision annotation assistant that auto-labels confident predictions and intelligently prioritizes uncertain, rare, and novel images for human review.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
