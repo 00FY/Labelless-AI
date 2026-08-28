@@ -1,5 +1,6 @@
 import React from 'react';
-import { NavigationTab } from '../types';
+import { NavigationTab, ActiveLearningRound } from '../types';
+import { getLabellessEffort } from '../data/realMetrics';
 import {
   LayoutDashboard,
   UploadCloud,
@@ -20,13 +21,19 @@ interface SidebarProps {
   activeTab: NavigationTab;
   setActiveTab: (tab: NavigationTab) => void;
   pendingReviewCount: number;
+  rounds?: ActiveLearningRound[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   pendingReviewCount,
+  rounds,
 }) => {
+  const effort = getLabellessEffort();
+  const latestRound = rounds && rounds.length > 0 ? rounds[rounds.length - 1] : null;
+  const currentMap = latestRound ? `${latestRound.mAP50}%` : `${(effort.final_mAP50 * 100).toFixed(1)}%`;
+  const effortSaved = `${effort.effort_reduction_vs_baseline_pct.toFixed(0)}% Saved`;
   const sections = [
     {
       group: 'OVERVIEW',
@@ -58,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       group: 'IMPROVEMENT',
       items: [
-        { id: 'evolution', label: 'Model Impact & Experiments', icon: TrendingUp, badge: '47% Saved' },
+        { id: 'evolution', label: 'Model Impact & Experiments', icon: TrendingUp, badge: effortSaved },
       ],
     },
     {
@@ -143,8 +150,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-1 border-t border-zinc-800">
-            <span>mAP@50: <b className="text-zinc-200">78.2%</b></span>
-            <span>Effort: <b className="text-emerald-400">-47%</b></span>
+            <span>mAP@50: <b className="text-zinc-200">{currentMap}</b></span>
+            <span>Effort: <b className="text-emerald-400">-{effort.effort_reduction_vs_baseline_pct.toFixed(0)}%</b></span>
           </div>
         </div>
       </div>

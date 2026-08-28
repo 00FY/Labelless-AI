@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem, ActiveLearningRound, NavigationTab } from '../types';
+import { getLabellessEffort, getMethodEffort } from '../data/realMetrics';
 import {
   Database,
   CheckCircle2,
@@ -38,10 +39,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [selectedRoundIndex, setSelectedRoundIndex] = useState(rounds.length - 1);
   const currentRound = rounds[selectedRoundIndex] || rounds[rounds.length - 1];
 
-  // Calculate dynamic stats from real ML experiment
-  const totalImages = 1000;
-  const autoLabeled = 735;
-  const humanReviewed = 265;
+  const effort = getLabellessEffort();
+  const randomEffort = getMethodEffort('random');
+
+  // Calculate dynamic stats directly from dataset items
+  const totalImages = datasetItems.length || 971;
+  const autoLabeled = datasetItems.filter((i) => i.status === 'auto_labeled').length;
+  const humanReviewed = datasetItems.filter((i) => i.status === 'human_reviewed').length;
   const pendingReview = datasetItems.filter((i) => i.status === 'pending').length;
 
   const autoPct = ((autoLabeled / totalImages) * 100).toFixed(1);
@@ -51,6 +55,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const pendingHighPriority = datasetItems.filter(
     (i) => i.status === 'pending' && (i.priorityLevel === 'critical' || i.priorityLevel === 'high')
   );
+
+  // Dynamic triage reasons distribution
+  const uncCount = datasetItems.filter((i) => i.uncertaintyScore >= 0.5 || i.reasons.some((r) => r.toLowerCase().includes('conf') || r.toLowerCase().includes('unc'))).length;
+  const rareCount = datasetItems.filter((i) => i.rareClassScore >= 0.4 || i.reasons.some((r) => r.toLowerCase().includes('rare'))).length;
+  const divCount = datasetItems.filter((i) => i.diversityScore >= 0.6 || i.reasons.some((r) => r.toLowerCase().includes('complex') || r.toLowerCase().includes('entropy'))).length;
+  const totalReasonWeight = uncCount + rareCount + divCount || 1;
+
+  const uncPct = Math.round((uncCount / totalReasonWeight) * 100);
+  const rarePct = Math.round((rareCount / totalReasonWeight) * 100);
+  const divPct = Math.round((divCount / totalReasonWeight) * 100);
+  const otherPct = Math.max(0, 100 - uncPct - rarePct - divPct);
 
   return (
     <div id="dashboard-page-root" className="space-y-8 pb-12">
@@ -170,7 +185,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
 
           <span className="text-xs font-mono font-bold text-zinc-300 bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-700">
-            Total Processed: 10,000 Images
+            Total Ingested: {totalImages.toLocaleString()} Images
           </span>
         </div>
 
@@ -251,11 +266,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </h3>
               </div>
               <span className="text-xs font-bold font-mono text-emerald-400">
-                +40.2% Total Gain (38.0% → 78.2%)
+                +27.5% Active Learning Gain (60.9% → 88.4%)
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Proves that human feedback on uncertain samples rapidly elevates YOLOv8 accuracy.
+              Proves that human feedback on prioritized uncertain samples rapidly elevates YOLOv8 accuracy.
             </p>
           </div>
 
@@ -271,21 +286,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <line x1="30" y1="120" x2="390" y2="120" stroke="#27272a" strokeDasharray="3 3" strokeWidth="0.8" />
 
                 {/* Y-axis labels */}
-                <text x="5" y="18" fill="#a1a1aa" fontSize="9" fontFamily="monospace">80%</text>
-                <text x="5" y="53" fill="#a1a1aa" fontSize="9" fontFamily="monospace">65%</text>
-                <text x="5" y="88" fill="#a1a1aa" fontSize="9" fontFamily="monospace">50%</text>
-                <text x="5" y="123" fill="#a1a1aa" fontSize="9" fontFamily="monospace">35%</text>
+                <text x="5" y="18" fill="#a1a1aa" fontSize="9" fontFamily="monospace">90%</text>
+                <text x="5" y="53" fill="#a1a1aa" fontSize="9" fontFamily="monospace">80%</text>
+                <text x="5" y="88" fill="#a1a1aa" fontSize="9" fontFamily="monospace">70%</text>
+                <text x="5" y="123" fill="#a1a1aa" fontSize="9" fontFamily="monospace">60%</text>
 
                 {/* Shaded Area under curve */}
                 <path
-                  d="M 50 115 L 120 78 L 190 54 L 260 40 L 330 32 L 330 130 L 50 130 Z"
+                  d="M 50 118 L 120 82 L 190 52 L 260 34 L 330 20 L 330 130 L 50 130 Z"
                   fill="url(#gradMap)"
                   opacity="0.25"
                 />
 
                 {/* Main Curve Line */}
                 <path
-                  d="M 50 115 L 120 78 L 190 54 L 260 40 L 330 32"
+                  d="M 50 118 L 120 82 L 190 52 L 260 34 L 330 20"
                   fill="none"
                   stroke="#3b82f6"
                   strokeWidth="3.5"
@@ -294,18 +309,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 />
 
                 {/* Round Points */}
-                <circle cx="50" cy="115" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="120" cy="78" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="190" cy="54" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="260" cy="40" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="330" cy="32" r="6" fill="#10B981" stroke="#34D399" strokeWidth="2.5" />
+                <circle cx="50" cy="118" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="120" cy="82" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="190" cy="52" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="260" cy="34" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
+                <circle cx="330" cy="20" r="6" fill="#10B981" stroke="#34D399" strokeWidth="2.5" />
 
                 {/* Point text */}
-                <text x="40" y="105" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">38.0%</text>
-                <text x="110" y="68" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">56.0%</text>
-                <text x="180" y="44" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">67.5%</text>
-                <text x="250" y="30" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">74.5%</text>
-                <text x="320" y="20" fill="#34D399" fontSize="11" fontWeight="bold" fontFamily="monospace">78.2%</text>
+                <text x="40" y="108" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">60.9%</text>
+                <text x="110" y="72" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">71.2%</text>
+                <text x="180" y="42" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">79.8%</text>
+                <text x="250" y="24" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">85.1%</text>
+                <text x="320" y="12" fill="#34D399" fontSize="11" fontWeight="bold" fontFamily="monospace">88.4%</text>
 
                 <defs>
                   <linearGradient id="gradMap" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -372,10 +387,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Model Uncertainty (High Entropy)
                 </span>
-                <span className="font-mono font-bold text-zinc-200">42%</span>
+                <span className="font-mono font-bold text-zinc-200">{uncPct}%</span>
               </div>
               <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-400 rounded-full w-[42%]"></div>
+                <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${uncPct}%` }}></div>
               </div>
             </div>
 
@@ -384,12 +399,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <div className="flex items-center justify-between text-xs">
                 <span className="flex items-center gap-1.5 text-rose-300 font-semibold">
                   <Flame className="w-3.5 h-3.5" />
-                  Rare Class (Fire, Debris)
+                  Rare Class (Fire, Damaged Building)
                 </span>
-                <span className="font-mono font-bold text-zinc-200">31%</span>
+                <span className="font-mono font-bold text-zinc-200">{rarePct}%</span>
               </div>
               <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-rose-400 rounded-full w-[31%]"></div>
+                <div className="h-full bg-rose-400 rounded-full transition-all duration-500" style={{ width: `${rarePct}%` }}></div>
               </div>
             </div>
 
@@ -400,10 +415,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <Layers className="w-3.5 h-3.5" />
                   Novel / Outlier Embedding
                 </span>
-                <span className="font-mono font-bold text-zinc-200">19%</span>
+                <span className="font-mono font-bold text-zinc-200">{divPct}%</span>
               </div>
               <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-400 rounded-full w-[19%]"></div>
+                <div className="h-full bg-blue-400 rounded-full transition-all duration-500" style={{ width: `${divPct}%` }}></div>
               </div>
             </div>
 
@@ -414,10 +429,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <Info className="w-3.5 h-3.5" />
                   Boundary Jitter / Clustered Boxes
                 </span>
-                <span className="font-mono font-bold text-zinc-200">8%</span>
+                <span className="font-mono font-bold text-zinc-200">{otherPct}%</span>
               </div>
               <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-zinc-600 rounded-full w-[8%]"></div>
+                <div className="h-full bg-zinc-600 rounded-full transition-all duration-500" style={{ width: `${otherPct}%` }}></div>
               </div>
             </div>
           </div>
@@ -447,7 +462,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </h3>
               </div>
               <p className="text-xs text-zinc-400">
-                12 images require immediate review for next retraining round
+                {pendingHighPriority.length} images require immediate review for next retraining round
               </p>
             </div>
 
@@ -455,7 +470,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               onClick={() => setActiveTab('queue')}
               className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20"
             >
-              <span>Full Queue (100)</span>
+              <span>Full Queue ({totalImages.toLocaleString()})</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -484,6 +499,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         <img
                           src={item.imageUrl}
                           alt={item.title}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.onerror = null;
+                            target.src = '/predictions/00f205aea57febc8e82d4e99a18b1d51.png';
+                          }}
                           className="w-10 h-7 rounded object-cover border border-zinc-700 shrink-0"
                         />
                         <span className="font-mono font-bold text-zinc-200 group-hover:text-blue-400">
@@ -553,12 +573,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Random / Confidence Baseline (50% review):</span>
-              <span className="font-mono font-bold text-zinc-300">3.47 Hours</span>
+              <span className="text-zinc-400">Random / Confidence Baseline ({randomEffort?.human_review_pct.toFixed(0) || 50}% review):</span>
+              <span className="font-mono font-bold text-zinc-300">{randomEffort?.human_hours_spent.toFixed(2) || '3.33'} Hours</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-blue-400 font-semibold">With LabelLess Active Pipeline (26.5% review):</span>
-              <span className="font-mono font-bold text-blue-400">1.84 Hours</span>
+              <span className="text-blue-400 font-semibold">With LabelLess Active Pipeline ({effort.human_review_pct.toFixed(1)}% review):</span>
+              <span className="font-mono font-bold text-blue-400">{effort.human_hours_spent.toFixed(2)} Hours</span>
             </div>
             <div className="h-px bg-zinc-800"></div>
             <div className="flex items-center justify-between text-sm font-bold">
@@ -566,7 +586,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <Check className="w-4 h-4" />
                 Net Time Saved:
               </span>
-              <span className="font-mono text-emerald-400 text-base">1.63 Hours Saved (47.0%)</span>
+              <span className="font-mono text-emerald-400 text-base">
+                {effort.human_hours_saved_vs_baseline.toFixed(2)} Hours Saved ({effort.effort_reduction_vs_baseline_pct.toFixed(1)}%)
+              </span>
             </div>
           </div>
 

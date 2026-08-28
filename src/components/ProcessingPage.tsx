@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ProjectConfig, NavigationTab } from '../types';
+import { ProjectConfig, NavigationTab, DatasetItem } from '../types';
 import { PIPELINE_STREAM_SAMPLES } from '../data/mockDataset';
 import {
   Cpu,
@@ -16,30 +16,32 @@ import {
 
 interface ProcessingPageProps {
   config: ProjectConfig;
+  datasetItems?: DatasetItem[];
   setActiveTab: (tab: NavigationTab) => void;
 }
 
 export const ProcessingPage: React.FC<ProcessingPageProps> = ({
   config,
+  datasetItems = [],
   setActiveTab,
 }) => {
+  const totalImages = datasetItems.length > 0 ? datasetItems.length : 971;
+  const autoAccepted = datasetItems.length > 0 ? datasetItems.filter((i) => i.status === 'auto_labeled').length : Math.round(totalImages * 0.75);
+  const sentForReview = datasetItems.length > 0 ? datasetItems.filter((i) => i.status === 'pending' || i.status === 'human_reviewed').length : totalImages - autoAccepted;
+  const skipped = 0;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [processedCount, setProcessedCount] = useState(7420);
-
-  const totalImages = 10000;
-  const autoAccepted = 5810;
-  const sentForReview = 1610;
-  const skipped = 0;
+  const [processedCount, setProcessedCount] = useState(autoAccepted + sentForReview);
 
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % PIPELINE_STREAM_SAMPLES.length);
-      setProcessedCount((prev) => (prev < totalImages ? prev + 12 : totalImages));
+      setProcessedCount((prev) => (prev < totalImages ? prev + 1 : totalImages));
     }, 2800);
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, totalImages]);
 
   const currentSample = PIPELINE_STREAM_SAMPLES[currentIndex];
 

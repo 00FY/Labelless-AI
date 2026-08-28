@@ -20,7 +20,32 @@ import { ExportPage } from './components/ExportPage';
 import { ExplainDecisionModal } from './components/ExplainDecisionModal';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
+  const getUrlTab = (): NavigationTab => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('tab');
+      if (t) return t as NavigationTab;
+      const hash = window.location.hash.replace('#', '');
+      if (hash) return hash as NavigationTab;
+    } catch {
+      // fallback
+    }
+    return 'dashboard';
+  };
+
+  const [activeTab, setActiveTabState] = useState<NavigationTab>(getUrlTab());
+
+  const setActiveTab = (tab: NavigationTab) => {
+    setActiveTabState(tab);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // ignore
+    }
+  };
+
   const [config, setConfig] = useState<ProjectConfig>(INITIAL_PROJECT_CONFIG);
   const [datasetItems, setDatasetItems] = useState<DatasetItem[]>(INITIAL_DATASET_ITEMS);
   const [rounds, setRounds] = useState<ActiveLearningRound[]>(ACTIVE_LEARNING_ROUNDS);
@@ -28,6 +53,24 @@ export const App: React.FC = () => {
     INITIAL_DATASET_ITEMS[0]
   );
   const [explainItem, setExplainItem] = useState<DatasetItem | null>(null);
+
+  // Load real active-learning ranked data from Person A/B if available
+  React.useEffect(() => {
+    fetch('/ranked_dataset.json')
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error('Fallback to initial items');
+      })
+      .then((data: DatasetItem[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDatasetItems(data);
+          setSelectedItemForWorkspace(data[0]);
+        }
+      })
+      .catch(() => {
+        // Keep initial dataset items
+      });
+  }, []);
 
   // Update a single item from workspace or queue
   const handleUpdateItem = (updated: DatasetItem) => {
@@ -70,6 +113,7 @@ export const App: React.FC = () => {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           pendingReviewCount={datasetItems.filter((i) => i.status === 'pending').length}
+          rounds={rounds}
         />
 
         {/* Dynamic Page Content Stage */}
@@ -104,7 +148,7 @@ export const App: React.FC = () => {
             )}
 
             {activeTab === 'processing' && (
-              <ProcessingPage config={config} setActiveTab={setActiveTab} />
+              <ProcessingPage config={config} datasetItems={datasetItems} setActiveTab={setActiveTab} />
             )}
 
             {activeTab === 'queue' && (

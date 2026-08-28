@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ActiveLearningRound, NavigationTab } from '../types';
+import { getLabellessEffort, getMethodEffort, getLabellessMetrics } from '../data/realMetrics';
 import {
   TrendingUp,
   Zap,
@@ -33,6 +34,15 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
   const [retrainProgress, setRetrainProgress] = useState<number>(0);
 
   const selectedRound = rounds.find((r) => r.round === selectedRoundNum) || rounds[rounds.length - 1];
+
+  const effort = getLabellessEffort();
+  const randomEffort = getMethodEffort('random');
+  const confEffort = getMethodEffort('confidence');
+
+  const finalMap = (effort.final_mAP50 * 100).toFixed(1);
+  const randomMap = randomEffort ? (randomEffort.final_mAP50 * 100).toFixed(1) : '75.1';
+  const confMap = confEffort ? (confEffort.final_mAP50 * 100).toFixed(1) : '82.4';
+  const effortPct = effort.effort_reduction_vs_baseline_pct.toFixed(0);
 
   const handleRetrainSim = () => {
     setIsRetraining(true);
@@ -93,29 +103,29 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center py-2">
-            {/* 47% Effort Saved */}
+            {/* Effort Saved */}
             <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-1">
               <div className="text-5xl sm:text-6xl font-black font-mono text-emerald-400">
-                47%
+                {effortPct}%
               </div>
               <div className="text-sm font-bold uppercase tracking-wider text-zinc-200">
                 Human Effort Saved vs Baselines
               </div>
               <p className="text-xs text-zinc-400">
-                Only 26.5% reviewed (265/1,000 imgs) vs 50.0% (500 imgs) in Random & Confidence
+                Only {effort.human_review_pct.toFixed(1)}% reviewed ({effort.images_reviewed}/{effort.total_images} imgs) vs {randomEffort?.human_review_pct.toFixed(1)}% ({randomEffort?.images_reviewed} imgs) in Random & Confidence
               </p>
             </div>
 
             {/* Superior Model Quality */}
             <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-1">
               <div className="text-5xl sm:text-6xl font-black font-mono text-blue-400">
-                78.2%
+                {finalMap}%
               </div>
               <div className="text-sm font-bold uppercase tracking-wider text-zinc-200">
                 Final mAP@50 Achieved
               </div>
               <p className="text-xs text-zinc-400">
-                Outperforms Confidence (73.5%) & Random (63.5%) with half the human review
+                Outperforms Confidence ({confMap}%) & Random ({randomMap}%) with half the human review
               </p>
             </div>
           </div>
@@ -312,7 +322,7 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
                   <span>Full Manual Baseline</span>
-                  <span className="font-mono font-bold text-zinc-300">100.0% (1,000 imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">100.0% ({effort.total_images.toLocaleString()} imgs)</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
                   <div className="h-full bg-zinc-500 rounded-full w-[100%]"></div>
@@ -323,10 +333,10 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
                   <span>Random Batch Sampling</span>
-                  <span className="font-mono font-bold text-zinc-300">50.0% (500 imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">{randomEffort?.human_review_pct.toFixed(1) || '41.2'}% ({randomEffort?.images_reviewed || 400} imgs)</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-600 rounded-full w-[50%]"></div>
+                  <div className="h-full bg-amber-600 rounded-full transition-all duration-500" style={{ width: `${randomEffort?.human_review_pct || 41.2}%` }}></div>
                 </div>
               </div>
 
@@ -334,10 +344,10 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
                   <span>Confidence-Only Thresholding</span>
-                  <span className="font-mono font-bold text-zinc-300">50.0% (500 imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">{confEffort?.human_review_pct.toFixed(1) || '41.2'}% ({confEffort?.images_reviewed || 400} imgs)</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full w-[50%]"></div>
+                  <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${confEffort?.human_review_pct || 41.2}%` }}></div>
                 </div>
               </div>
 
@@ -345,10 +355,10 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               <div className="space-y-1 pt-1 border-t border-zinc-800">
                 <div className="flex justify-between text-xs font-bold text-emerald-400">
                   <span>LABELLESS AI (Active Triaging)</span>
-                  <span className="font-mono text-sm">26.5% (265 imgs — 47% Saved)</span>
+                  <span className="font-mono text-sm">{effort.human_review_pct.toFixed(1)}% ({effort.images_reviewed} imgs — {effortPct}% Saved)</span>
                 </div>
                 <div className="h-3.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-400 rounded-full w-[26.5%] shadow-lg shadow-emerald-400/30"></div>
+                  <div className="h-full bg-emerald-400 rounded-full shadow-lg shadow-emerald-400/30 transition-all duration-500" style={{ width: `${effort.human_review_pct}%` }}></div>
                 </div>
               </div>
             </div>
@@ -367,33 +377,33 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
               {/* Random Sampling */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Random Batch Sampling (500 imgs)</span>
-                  <span className="font-mono font-bold text-zinc-300">63.5%</span>
+                  <span>Random Batch Sampling ({randomEffort?.images_reviewed || 400} imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">{randomMap}%</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-600 rounded-full w-[63.5%]"></div>
+                  <div className="h-full bg-amber-600 rounded-full transition-all duration-500" style={{ width: `${randomMap}%` }}></div>
                 </div>
               </div>
 
               {/* Confidence Only */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Confidence-Only Thresholding (500 imgs)</span>
-                  <span className="font-mono font-bold text-zinc-300">73.5%</span>
+                  <span>Confidence-Only Thresholding ({confEffort?.images_reviewed || 400} imgs)</span>
+                  <span className="font-mono font-bold text-zinc-300">{confMap}%</span>
                 </div>
                 <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full w-[73.5%]"></div>
+                  <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${confMap}%` }}></div>
                 </div>
               </div>
 
               {/* LabelLess AI */}
               <div className="space-y-1 pt-1 border-t border-zinc-800">
                 <div className="flex justify-between text-xs font-bold text-blue-400">
-                  <span>LABELLESS AI Active Pipeline (265 imgs)</span>
-                  <span className="font-mono text-sm">78.2% (+4.7% over Confidence)</span>
+                  <span>LABELLESS AI Active Pipeline ({effort.images_reviewed} imgs)</span>
+                  <span className="font-mono text-sm">{finalMap}% (+{(parseFloat(finalMap) - parseFloat(confMap)).toFixed(1)}% over Confidence)</span>
                 </div>
                 <div className="h-3.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-400 rounded-full w-[78.2%] shadow-lg shadow-blue-400/30"></div>
+                  <div className="h-full bg-blue-400 rounded-full shadow-lg shadow-blue-400/30 transition-all duration-500" style={{ width: `${finalMap}%` }}></div>
                 </div>
               </div>
             </div>

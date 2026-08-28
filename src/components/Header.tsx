@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
         return (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>✓ ROUND 3 COMPLETE</span>
+            <span>✓ ROUND {config.currentRound} COMPLETE</span>
           </div>
         );
       default:

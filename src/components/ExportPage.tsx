@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem } from '../types';
+import { getLabellessEffort } from '../data/realMetrics';
 import {
   Download,
   FileCode,
@@ -19,16 +20,61 @@ interface ExportPageProps {
 }
 
 export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) => {
-  const [format, setFormat] = useState<'yolo' | 'coco' | 'pascal' | 'json'>('yolo');
+  const [format, setFormat] = useState<'yolo' | 'coco' | 'pascal' | 'json' | 'human_labels'>('human_labels');
   const [includeHumanVerified, setIncludeHumanVerified] = useState(true);
   const [includeHighConfPseudo, setIncludeHighConfPseudo] = useState(true);
   const [includeLowConf, setIncludeLowConf] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  const totalAuto = 7420;
-  const totalHuman = 1840;
-  const totalPending = 740;
+  const totalAuto = datasetItems.filter((i) => i.status === 'auto_labeled').length;
+  const totalHuman = datasetItems.filter((i) => i.status === 'human_reviewed').length;
+  const totalPending = datasetItems.filter((i) => i.status === 'pending').length;
+
+  // Person D Retraining Pipeline format (inputs/human_labels.json)
+  const getHumanLabelsPayload = () => {
+    const labels = datasetItems
+      .filter((item) => {
+        if (item.status === 'pending' && !includeLowConf) return false;
+        if (item.status === 'human_reviewed' && !includeHumanVerified) return false;
+        if (item.status === 'auto_labeled' && !includeHighConfPseudo) return false;
+        return true;
+      })
+      .map((item) => {
+        const action = item.status === 'rejected' ? 'reject' : item.status === 'human_reviewed' ? 'correct' : 'accept';
+        return {
+          image_id: item.filename || `${item.id}.png`,
+          action: action,
+          boxes: action === 'reject' ? [] : item.boxes.map((b) => {
+            const normName = b.label.toLowerCase().replace(/\s+/g, '');
+            const clsId = normName.includes('undamaged')
+              ? 0
+              : normName.includes('damaged')
+              ? 1
+              : normName.includes('fire')
+              ? 2
+              : normName.includes('smoke')
+              ? 3
+              : 0;
+            return {
+              class_id: clsId,
+              class_name: normName,
+              x: Number(b.x.toFixed(2)),
+              y: Number(b.y.toFixed(2)),
+              width: Number(b.width.toFixed(2)),
+              height: Number(b.height.toFixed(2)),
+              confidence: Number((b.confidence ?? 1.0).toFixed(2)),
+            };
+          }),
+        };
+      });
+
+    return { labels };
+  };
+
+  const getHumanLabelsPreview = () => {
+    return JSON.stringify(getHumanLabelsPayload(), null, 2);
+  };
 
   // Sample exported payload preview
   const getYoloPreview = () => {
@@ -58,44 +104,55 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
           date_created: '2026-08-27',
         },
         categories: config.classes.map((c, i) => ({ id: i, name: c, supercategory: 'disaster' })),
-        images: [
-          { id: 1842, file_name: 'disaster_1842.jpg', width: 1000, height: 800 },
-          { id: 921, file_name: 'disaster_0921.jpg', width: 1000, height: 800 },
-          { id: 194, file_name: 'disaster_0194.jpg', width: 1000, height: 800 },
-        ],
-        annotations: [
-          {
-            id: 1,
-            image_id: 1842,
-            category_id: 2,
-            bbox: [180, 150, 640, 680],
-            confidence: 1.0,
-            is_human_verified: true,
-          },
-          {
-            id: 2,
-            image_id: 194,
+        images: datasetItems.slice(0, 10).map((item, idx) => ({
+          id: idx + 1,
+          file_name: item.filename || `${item.id}.png`,
+          width: 1000,
+          height: 800,
+        })),
+        annotations: datasetItems.slice(0, 10).flatMap((item, idx) =>
+          item.boxes.map((box, bIdx) => ({
+            id: idx * 10 + bIdx + 1,
+            image_id: idx + 1,
             category_id: 1,
-            bbox: [220, 260, 580, 520],
-            confidence: 0.98,
-            is_human_verified: false,
-          },
-        ],
+            bbox: [box.x * 10, box.y * 8, box.width * 10, box.height * 8],
+            confidence: box.confidence,
+            is_human_verified: item.status === 'human_reviewed',
+          }))
+        ),
       },
       null,
       2
     );
   };
 
+  const getActivePreview = () => {
+    if (format === 'human_labels') return getHumanLabelsPreview();
+    if (format === 'coco') return getCocoPreview();
+    if (format === 'json') return JSON.stringify(datasetItems.slice(0, 5), null, 2);
+    return getYoloPreview();
+  };
+
   const handleDownloadDataset = () => {
     setIsExporting(true);
     setTimeout(() => {
-      const content = format === 'coco' ? getCocoPreview() : getYoloPreview();
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      let content = getActivePreview();
+      let filename = `labelless_${config.projectName.toLowerCase()}_${format}_annotations.txt`;
+      let mime = 'text/plain;charset=utf-8';
+
+      if (format === 'human_labels') {
+        filename = 'human_labels.json';
+        mime = 'application/json;charset=utf-8';
+      } else if (format === 'coco' || format === 'json') {
+        filename = `labelless_${format}_annotations.json`;
+        mime = 'application/json;charset=utf-8';
+      }
+
+      const blob = new Blob([content], { type: mime });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `labelless_${config.projectName.toLowerCase()}_${format}_annotations.txt`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -106,13 +163,14 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
   };
 
   const handleDownloadModel = () => {
+    const effort = getLabellessEffort();
     const meta = JSON.stringify(
       {
         model: config.modelType,
         version: config.modelVersion,
         active_round: config.currentRound,
-        mAP50: 86.4,
-        weights: 'yolov8_labelless_disaster_r4.pt',
+        mAP50: parseFloat((effort.final_mAP50 * 100).toFixed(1)),
+        weights: `models/round_${config.currentRound}/best.pt`,
         classes: config.classes,
       },
       null,
@@ -131,7 +189,7 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
   };
 
   const handleCopy = () => {
-    const text = format === 'coco' ? getCocoPreview() : getYoloPreview();
+    const text = getActivePreview();
     navigator.clipboard.writeText(text);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
@@ -160,7 +218,7 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
           {/* Dataset Ingestion Summary */}
           <div className="p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-4 shadow-xl">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
-              Dataset Manifest (10,000 Images)
+              Dataset Manifest ({datasetItems.length.toLocaleString()} Images)
             </h3>
 
             <div className="space-y-2 text-xs">
@@ -204,9 +262,9 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
 
             <div className="grid grid-cols-2 gap-2.5">
               {[
+                { id: 'human_labels', label: 'human_labels.json', desc: 'Person D Retrain Pipeline' },
                 { id: 'yolo', label: 'YOLOv8 (.txt)', desc: 'Ultralytics PyTorch / Darknet' },
                 { id: 'coco', label: 'COCO (.json)', desc: 'Standard JSON instances format' },
-                { id: 'pascal', label: 'Pascal VOC (.xml)', desc: 'XML bounding box tags' },
                 { id: 'json', label: 'Custom JSON', desc: 'Full active-learning metadata' },
               ].map((f) => (
                 <button

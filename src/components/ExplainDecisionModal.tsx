@@ -76,6 +76,11 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                 <img
                   src={item.imageUrl}
                   alt={item.title}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.onerror = null;
+                    target.src = '/predictions/00f205aea57febc8e82d4e99a18b1d51.png';
+                  }}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[11px] font-mono text-zinc-300 border border-zinc-700">

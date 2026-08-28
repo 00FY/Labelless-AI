@@ -1252,7 +1252,7 @@ export const ACTIVE_LEARNING_ROUNDS: ActiveLearningRound[] = labellessMetrics.ma
 
   return {
     round: m.round,
-    name: m.round === 0 ? 'Round 0 (Seed Baseline)' : Round  ( reviewed),
+    name: m.round === 0 ? 'Round 0 (Seed Baseline)' : `Round ${m.round} (${humanReviewedCount} reviewed)`,
     mAP50: parseFloat((m.mAP50 * 100).toFixed(1)),
     precision: parseFloat((m.precision * 100).toFixed(1)),
     recall: parseFloat((m.recall * 100).toFixed(1)),

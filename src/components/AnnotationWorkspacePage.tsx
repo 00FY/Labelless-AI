@@ -220,6 +220,11 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
             <img
               src={item.imageUrl}
               alt={item.title}
+              onError={(e) => {
+                const target = e.currentTarget;
+                target.onerror = null;
+                target.src = '/predictions/00f205aea57febc8e82d4e99a18b1d51.png';
+              }}
               className="w-full h-full object-cover"
             />
 
