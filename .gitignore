@@ -6,3 +6,13 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# ML Data & Artifacts
+data/
+runs/
+models/
+__pycache__/
+*.pyc
+*.pt
+yolov8*.pt
+

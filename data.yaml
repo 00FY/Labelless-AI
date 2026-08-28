@@ -1,0 +1,10 @@
+path: data
+train: seed/images
+val: test/images
+test: test/images
+
+names:
+  0: undamagedbuilding
+  1: damagedbuilding
+  2: fire
+  3: smoke
