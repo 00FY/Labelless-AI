@@ -1,0 +1,53 @@
+[
+  {
+    "method": "random",
+    "final_round": 4,
+    "total_images": 1000,
+    "images_reviewed": 500,
+    "human_review_rate": 0.5,
+    "human_review_pct": 50.0,
+    "images_automatically_handled": 500,
+    "automation_pct": 50.0,
+    "effort_reduction_vs_baseline_pct": 0.0,
+    "images_saved_vs_baseline": 0,
+    "final_mAP50": 0.635,
+    "mAP50_gain": 0.255,
+    "mAP_gain_per_100_images": 0.051,
+    "human_hours_spent": 3.47,
+    "human_hours_saved_vs_baseline": 0.0
+  },
+  {
+    "method": "confidence",
+    "final_round": 4,
+    "total_images": 1000,
+    "images_reviewed": 500,
+    "human_review_rate": 0.5,
+    "human_review_pct": 50.0,
+    "images_automatically_handled": 500,
+    "automation_pct": 50.0,
+    "effort_reduction_vs_baseline_pct": 0.0,
+    "images_saved_vs_baseline": 0,
+    "final_mAP50": 0.735,
+    "mAP50_gain": 0.355,
+    "mAP_gain_per_100_images": 0.071,
+    "human_hours_spent": 3.47,
+    "human_hours_saved_vs_baseline": 0.0
+  },
+  {
+    "method": "labelless",
+    "final_round": 4,
+    "total_images": 1000,
+    "images_reviewed": 265,
+    "human_review_rate": 0.265,
+    "human_review_pct": 26.5,
+    "images_automatically_handled": 735,
+    "automation_pct": 73.5,
+    "effort_reduction_vs_baseline_pct": 47.0,
+    "images_saved_vs_baseline": 235,
+    "final_mAP50": 0.782,
+    "mAP50_gain": 0.402,
+    "mAP_gain_per_100_images": 0.1517,
+    "human_hours_spent": 1.84,
+    "human_hours_saved_vs_baseline": 1.63
+  }
+]
