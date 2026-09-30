@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ProjectConfig, NavigationTab, DatasetItem } from '../types';
-import { PIPELINE_STREAM_SAMPLES } from '../data/mockDataset';
+import { PIPELINE_STREAM_SAMPLES } from '../data/fallbackPresets';
 import {
   Cpu,
   CheckCircle2,
@@ -153,13 +153,13 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               <div className="md:col-span-6 relative rounded-2xl overflow-hidden border border-zinc-700 bg-black aspect-video flex items-center justify-center">
                 <img
                   src={
-                    currentSample.class === 'Building'
-                      ? 'https://images.unsplash.com/photo-1542382257-80dedb725088?auto=format&fit=crop&w=800&q=80'
+                    currentSample.class === 'Damaged Building'
+                      ? '/predictions/09e62858a678e6fcea8bced21d03ab1c.png'
                       : currentSample.class === 'Fire'
-                      ? 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?auto=format&fit=crop&w=800&q=80'
-                      : currentSample.class === 'Person'
-                      ? 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80'
-                      : 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80'
+                      ? '/predictions/multidisaster_sample_1.jpg'
+                      : currentSample.class === 'Smoke'
+                      ? '/predictions/multidisaster_sample_3.jpg'
+                      : '/predictions/00f205aea57febc8e82d4e99a18b1d51.png'
                   }
                   alt={currentSample.name}
                   className="w-full h-full object-cover"

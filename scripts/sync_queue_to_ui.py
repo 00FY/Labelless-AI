@@ -25,6 +25,19 @@ if sys.platform == "win32":
     except Exception:
         pass
 
+# Read canonical config
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+
+from load_config import cfg, get_yolo_to_display, get_ranking_weights  # noqa: E402
+
+_ROUTING = cfg["routing"]
+_PRIORITY_LEVELS = _ROUTING["priority_levels"]
+_AUTO_LABEL_MAX = _ROUTING["auto_label_priority_max"]
+_IMG_SIZE = cfg["training"]["image_size"]  # used for pixel→percentage normalisation
+_W_UNC, _W_RARE, _W_DIV = get_ranking_weights()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Sync ranked queue and predictions to frontend review dataset")
@@ -34,12 +47,11 @@ def parse_args():
     return parser.parse_args()
 
 
-CLASS_NAME_MAP = {
-    "damagedbuilding": "Damaged Building",
-    "undamagedbuilding": "Undamaged Building",
-    "fire": "Fire",
-    "smoke": "Smoke",
-}
+# Build class name mapping from config
+CLASS_NAME_MAP = get_yolo_to_display()
+# Also add lowercased versions for fuzzy matching
+_EXTRA = {k.lower(): v for k, v in CLASS_NAME_MAP.items()}
+CLASS_NAME_MAP.update(_EXTRA)
 
 
 def sync_data(queue_path: Path, preds_path: Path, output_path: Path):
@@ -87,10 +99,10 @@ def sync_data(queue_path: Path, preds_path: Path, output_path: Path):
                 # Pixel coords [x1, y1, x2, y2]
                 x1, y1, x2, y2 = bbox
                 # Standard normalized percentage (assuming 640x640 base if not known)
-                bx = max(0.0, min(100.0, (x1 / 640.0) * 100))
-                by = max(0.0, min(100.0, (y1 / 640.0) * 100))
-                bw = max(2.0, min(100.0, ((x2 - x1) / 640.0) * 100))
-                bh = max(2.0, min(100.0, ((y2 - y1) / 640.0) * 100))
+                bx = max(0.0, min(100.0, (x1 / _IMG_SIZE) * 100))
+                by = max(0.0, min(100.0, (y1 / _IMG_SIZE) * 100))
+                bw = max(2.0, min(100.0, ((x2 - x1) / _IMG_SIZE) * 100))
+                bh = max(2.0, min(100.0, ((y2 - y1) / _IMG_SIZE) * 100))
             else:
                 bx, by, bw, bh = 20.0, 20.0, 30.0, 30.0
 
@@ -106,14 +118,14 @@ def sync_data(queue_path: Path, preds_path: Path, output_path: Path):
 
         priority_score = float(item.get("priority_score", 0.5))
         priority_level = (
-            "critical" if priority_score >= 0.70
-            else "high" if priority_score >= 0.58
-            else "medium" if priority_score >= 0.40
+            "critical" if priority_score >= _PRIORITY_LEVELS["critical"]
+            else "high" if priority_score >= _PRIORITY_LEVELS["high"]
+            else "medium" if priority_score >= _PRIORITY_LEVELS["medium"]
             else "low"
         )
 
-        # AI auto-labels easy/confident cases (low priority score < 0.58)
-        status = "auto_labeled" if priority_score < 0.58 else "pending"
+        # AI auto-labels easy/confident cases (low priority score)
+        status = "auto_labeled" if priority_score < _AUTO_LABEL_MAX else "pending"
 
         # Check if specific image file exists in public/predictions
         image_file_path = Path("public/predictions") / img_id
@@ -149,9 +161,9 @@ def sync_data(queue_path: Path, preds_path: Path, output_path: Path):
             "priorityLevel": priority_level,
             "reasons": item.get("reasons", [item.get("reason", "Active learning priority")]),
             "explanation": {
-                "uncertaintyContribution": round(priority_score * 0.7, 2),
-                "diversityContribution": round(priority_score * 0.1, 2),
-                "rareClassContribution": round(priority_score * 0.2, 2),
+                "uncertaintyContribution": round(priority_score * _W_UNC, 2),
+                "diversityContribution": round(priority_score * _W_DIV, 2),
+                "rareClassContribution": round(priority_score * _W_RARE, 2),
                 "recommendation": "Review suggested" if priority_score >= 0.45 else "Auto-labeled candidate",
                 "bulletPoints": [
                     f"Model uncertainty: {item.get('uncertainty_score', 0.5):.1%}",

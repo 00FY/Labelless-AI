@@ -147,7 +147,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                     <div className="relative rounded-lg overflow-hidden border border-emerald-500/40 bg-black aspect-video">
                       <img
-                        src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80"
+                        src="/predictions/00f205aea57febc8e82d4e99a18b1d51.png"
                         alt="Clear rescue car"
                         className="w-full h-full object-cover opacity-90"
                       />
@@ -189,7 +189,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                     <div className="relative rounded-lg overflow-hidden border border-rose-500/40 bg-black aspect-video">
                       <img
-                        src="https://images.unsplash.com/photo-1542382257-80dedb725088?auto=format&fit=crop&w=800&q=80"
+                        src="/predictions/09e62858a678e6fcea8bced21d03ab1c.png"
                         alt="Collapsed structure"
                         className="w-full h-full object-cover opacity-90"
                       />

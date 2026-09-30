@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { NavigationTab, DatasetItem, ProjectConfig, ActiveLearningRound } from './types';
 import {
   INITIAL_PROJECT_CONFIG,
-  INITIAL_DATASET_ITEMS,
   ACTIVE_LEARNING_ROUNDS,
-} from './data/mockDataset';
+} from './data/fallbackPresets';
+import { loadPipelineConfig } from './data/pipelineConfig';
 
 // Components
 import { Header } from './components/Header';
@@ -18,6 +18,8 @@ import { AnnotationWorkspacePage } from './components/AnnotationWorkspacePage';
 import { EvolutionImpactPage } from './components/EvolutionImpactPage';
 import { ExportPage } from './components/ExportPage';
 import { ExplainDecisionModal } from './components/ExplainDecisionModal';
+
+import { fetchQueue, submitHumanLabel, advanceRound } from './services/api';
 
 export const App: React.FC = () => {
   const getUrlTab = (): NavigationTab => {
@@ -47,35 +49,46 @@ export const App: React.FC = () => {
   };
 
   const [config, setConfig] = useState<ProjectConfig>(INITIAL_PROJECT_CONFIG);
-  const [datasetItems, setDatasetItems] = useState<DatasetItem[]>(INITIAL_DATASET_ITEMS);
+  const [datasetItems, setDatasetItems] = useState<DatasetItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLiveBackend, setIsLiveBackend] = useState(false);
   const [rounds, setRounds] = useState<ActiveLearningRound[]>(ACTIVE_LEARNING_ROUNDS);
-  const [selectedItemForWorkspace, setSelectedItemForWorkspace] = useState<DatasetItem>(
-    INITIAL_DATASET_ITEMS[0]
+  const [selectedItemForWorkspace, setSelectedItemForWorkspace] = useState<DatasetItem | null>(
+    null
   );
   const [explainItem, setExplainItem] = useState<DatasetItem | null>(null);
 
-  // Load real active-learning ranked data from Person A/B if available
+  // Load pipeline config and real active-learning ranked data
   React.useEffect(() => {
-    fetch('/ranked_dataset.json')
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error('Fallback to initial items');
-      })
-      .then((data: DatasetItem[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setDatasetItems(data);
-          setSelectedItemForWorkspace(data[0]);
+    // Load pipeline config (weights, thresholds) from the exported JSON
+    loadPipelineConfig();
+
+    setIsLoading(true);
+    fetchQueue()
+      .then(({ items, isLiveBackend: isLive }) => {
+        setIsLiveBackend(isLive);
+        if (Array.isArray(items) && items.length > 0) {
+          setDatasetItems(items);
+          setSelectedItemForWorkspace(items[0]);
         }
       })
       .catch(() => {
-        // Keep initial dataset items
+        // No data available — empty state will be shown
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, []);
 
-  // Update a single item from workspace or queue
+  // Update a single item from workspace or queue with disk persistence
   const handleUpdateItem = (updated: DatasetItem) => {
     setDatasetItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
     setSelectedItemForWorkspace(updated);
+    // Persist human review to backend / disk
+    submitHumanLabel(
+      updated,
+      updated.status || 'human_reviewed'
+    );
   };
 
   // Switch to workspace with specific item
@@ -89,8 +102,10 @@ export const App: React.FC = () => {
     setExplainItem(item);
   };
 
-  // Trigger retraining simulation (Round 4 or new round)
-  const handleTriggerRetrain = () => {
+  // Trigger retraining / round progression
+  const handleTriggerRetrain = async () => {
+    const nextRoundNumber = rounds.length;
+    await advanceRound(nextRoundNumber);
     setRounds((prev) => [
       ...prev.map((r) => (r.round === 3 ? { ...r, status: 'completed' as const } : r)),
     ]);
@@ -104,6 +119,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenDemoTour={() => setActiveTab('evolution')}
+        isLiveBackend={isLiveBackend}
       />
 
       {/* Main Layout Body */}
@@ -119,7 +135,34 @@ export const App: React.FC = () => {
         {/* Dynamic Page Content Stage */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-zinc-950">
           <div className="max-w-7xl mx-auto">
-            {activeTab === 'landing' && (
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                <p className="text-sm text-zinc-400">Loading pipeline data…</p>
+              </div>
+            )}
+
+            {/* Empty state — no data loaded */}
+            {!isLoading && datasetItems.length === 0 && activeTab !== 'landing' && activeTab !== 'upload' && activeTab !== 'datasets' && activeTab !== 'settings' && activeTab !== 'evolution' && activeTab !== 'model_improvement' && activeTab !== 'retrain' && activeTab !== 'processing' && (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-3xl">📂</div>
+                <h2 className="text-lg font-bold text-zinc-200">No Dataset Loaded</h2>
+                <p className="text-sm text-zinc-400 max-w-md">
+                  Run the pipeline to generate predictions and a ranked queue, then use
+                  <code className="mx-1 px-1.5 py-0.5 rounded bg-zinc-800 text-blue-400 text-xs font-mono">python scripts/sync_queue_to_ui.py</code>
+                  to populate the review dashboard.
+                </p>
+                <button
+                  onClick={() => setActiveTab('upload')}
+                  className="mt-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                >
+                  Go to Upload
+                </button>
+              </div>
+            )}
+
+            {!isLoading && activeTab === 'landing' && (
               <LandingPage
                 onStartAnnotation={() => setActiveTab('upload')}
                 onViewDemoDataset={() => setActiveTab('dashboard')}
@@ -127,7 +170,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {activeTab === 'dashboard' && (
+            {!isLoading && activeTab === 'dashboard' && (
               <DashboardPage
                 config={config}
                 datasetItems={datasetItems}
@@ -138,7 +181,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {(activeTab === 'upload' || activeTab === 'datasets') && (
+            {!isLoading && (activeTab === 'upload' || activeTab === 'datasets') && (
               <UploadPage
                 config={config}
                 setConfig={setConfig}
@@ -147,11 +190,11 @@ export const App: React.FC = () => {
               />
             )}
 
-            {activeTab === 'processing' && (
+            {!isLoading && activeTab === 'processing' && (
               <ProcessingPage config={config} datasetItems={datasetItems} setActiveTab={setActiveTab} />
             )}
 
-            {activeTab === 'queue' && (
+            {!isLoading && activeTab === 'queue' && (
               <SmartReviewQueuePage
                 datasetItems={datasetItems}
                 onSelectImage={handleSelectImageForWorkspace}
@@ -160,7 +203,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {activeTab === 'workspace' && (
+            {!isLoading && activeTab === 'workspace' && selectedItemForWorkspace && (
               <AnnotationWorkspacePage
                 item={selectedItemForWorkspace}
                 datasetItems={datasetItems}
@@ -171,7 +214,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {(activeTab === 'evolution' || activeTab === 'model_improvement' || activeTab === 'retrain') && (
+            {!isLoading && (activeTab === 'evolution' || activeTab === 'model_improvement' || activeTab === 'retrain') && (
               <EvolutionImpactPage
                 rounds={rounds}
                 onTriggerRetrain={handleTriggerRetrain}
@@ -179,11 +222,11 @@ export const App: React.FC = () => {
               />
             )}
 
-            {activeTab === 'export' && (
+            {!isLoading && activeTab === 'export' && (
               <ExportPage config={config} datasetItems={datasetItems} />
             )}
 
-            {activeTab === 'settings' && (
+            {!isLoading && activeTab === 'settings' && (
               <UploadPage
                 config={config}
                 setConfig={setConfig}

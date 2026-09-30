@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { DatasetItem, BoundingBox, FeedbackCategory, NavigationTab } from '../types';
-import { CLASS_COLORS } from '../data/mockDataset';
+import { CLASS_COLORS } from '../data/fallbackPresets';
 import {
   Check,
   Edit2,

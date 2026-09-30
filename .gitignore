@@ -8,9 +8,9 @@ coverage/
 !.env.example
 
 # ML Data & Artifacts
-data/
-runs/
-models/
+/data/
+/runs/
+/models/
 __pycache__/
 *.pyc
 *.pt

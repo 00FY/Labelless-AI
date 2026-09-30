@@ -7,6 +7,7 @@ interface HeaderProps {
   activeTab: NavigationTab;
   setActiveTab: (tab: NavigationTab) => void;
   onOpenDemoTour: () => void;
+  isLiveBackend?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,7 +15,25 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   onOpenDemoTour,
+  isLiveBackend = false,
 }) => {
+  const getBackendStatusBadge = () => {
+    if (isLiveBackend) {
+      return (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold" title="Connected to FastAPI Server on :8000">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>● FASTAPI LIVE</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold" title="Running in static offline replay mode. Start 'python -m uvicorn server:app' for live backend.">
+        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span>○ OFFLINE REPLAY MODE</span>
+      </div>
+    );
+  };
+
   const getStatusBadge = () => {
     switch (config.pipelineStatus) {
       case 'processing':
@@ -105,7 +124,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Actions: Status & Judge Tour CTA */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-2">
+            {getBackendStatusBadge()}
             {getStatusBadge()}
           </div>
 

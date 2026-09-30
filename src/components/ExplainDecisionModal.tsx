@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DatasetItem } from '../types';
 import { X, Sparkles, AlertTriangle, Layers, Flame, CheckCircle, Info } from 'lucide-react';
+import { getPipelineConfig, getFormulaString } from '../data/pipelineConfig';
 
 interface ExplainDecisionModalProps {
   item: DatasetItem | null;
@@ -15,6 +16,11 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
   onOpenWorkspace,
 }) => {
   if (!item) return null;
+
+  const pipeCfg = getPipelineConfig();
+  const formulaStr = getFormulaString(pipeCfg);
+  const { w_uncertainty, w_rare_class, w_diversity } = pipeCfg.ranking;
+  const confThreshold = pipeCfg.routing.confidence_threshold;
 
   const getPriorityColor = (level: string) => {
     switch (level) {
@@ -125,7 +131,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                   Score Decomposition Formula
                 </h4>
                 <span className="text-[11px] font-mono text-zinc-400">
-                  Priority = (0.4 × Unc) + (0.3 × Div) + (0.3 × Rarity)
+                  {formulaStr}
                 </span>
               </div>
 
@@ -134,7 +140,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-1.5 text-amber-300 font-medium">
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    Model Uncertainty (Entropy)
+                    Model Uncertainty (weight: {w_uncertainty})
                   </span>
                   <span className="font-mono text-zinc-300">
                     +{(item.explanation.uncertaintyContribution).toFixed(2)} (Score: {(item.uncertaintyScore * 100).toFixed(0)}%)
@@ -147,7 +153,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                   />
                 </div>
                 <p className="text-[11px] text-zinc-400">
-                  Prediction confidence is {(item.confidence * 100).toFixed(0)}% (threshold: 85%). Low certainty indicates potential label confusion.
+                  Prediction confidence is {(item.confidence * 100).toFixed(0)}% (threshold: {(confThreshold * 100).toFixed(0)}%). Low certainty indicates potential label confusion.
                 </p>
               </div>
 
@@ -156,7 +162,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-1.5 text-blue-300 font-medium">
                     <Layers className="w-3.5 h-3.5" />
-                    Visual / Embedding Diversity
+                    Visual / Embedding Diversity (weight: {w_diversity})
                   </span>
                   <span className="font-mono text-zinc-300">
                     +{(item.explanation.diversityContribution).toFixed(2)} (Score: {(item.diversityScore * 100).toFixed(0)}%)
@@ -178,7 +184,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-1.5 text-rose-300 font-medium">
                     <Flame className="w-3.5 h-3.5" />
-                    Class Rarity & Imbalance Weight
+                    Class Rarity & Imbalance (weight: {w_rare_class})
                   </span>
                   <span className="font-mono text-zinc-300">
                     +{(item.explanation.rareClassContribution).toFixed(2)} (Score: {(item.rareClassScore * 100).toFixed(0)}%)

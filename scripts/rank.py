@@ -31,6 +31,21 @@ if sys.platform == "win32":
     except Exception:
         pass
 
+# Read canonical weights from config.yaml
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+
+from load_config import cfg  # noqa: E402
+
+_RANKING = cfg["ranking"]
+_DEFAULT_W_UNC = _RANKING["w_uncertainty"]
+_DEFAULT_W_RARE = _RANKING["w_rare_class"]
+_DEFAULT_W_DIV = _RANKING["w_diversity"]
+_UNC_BLEND_AVG = _RANKING["uncertainty_blend_avg"]
+_DIV_SCORES = _RANKING["diversity_scores"]
+_DIV_BOX_THRESHOLDS = _RANKING["diversity_box_thresholds"]
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -51,20 +66,20 @@ def parse_args():
     parser.add_argument(
         "--uncertainty-weight",
         type=float,
-        default=0.70,
-        help="Weight for uncertainty component in priority score (default: 0.70)",
+        default=_DEFAULT_W_UNC,
+        help=f"Weight for uncertainty component in priority score (default: {_DEFAULT_W_UNC})",
     )
     parser.add_argument(
         "--rare-weight",
         type=float,
-        default=0.20,
-        help="Weight for rare-class boost in priority score (default: 0.20)",
+        default=_DEFAULT_W_RARE,
+        help=f"Weight for rare-class boost in priority score (default: {_DEFAULT_W_RARE})",
     )
     parser.add_argument(
         "--diversity-weight",
         type=float,
-        default=0.10,
-        help="Weight for diversity/entropy component in priority score (default: 0.10)",
+        default=_DEFAULT_W_DIV,
+        help=f"Weight for diversity/entropy component in priority score (default: {_DEFAULT_W_DIV})",
     )
     parser.add_argument(
         "--top-k",
@@ -122,7 +137,7 @@ def score_item(
         avg_conf = sum(confidences) / len(confidences)
         min_conf = min(confidences)
         # Least confident prediction heavily influences uncertainty
-        uncertainty_score = 0.6 * (1.0 - avg_conf) + 0.4 * (1.0 - min_conf)
+        uncertainty_score = _UNC_BLEND_AVG * (1.0 - avg_conf) + (1.0 - _UNC_BLEND_AVG) * (1.0 - min_conf)
         if avg_conf < 0.60:
             reasons.append(f"Low average model confidence ({avg_conf:.1%})")
         elif min_conf < 0.50:
@@ -139,15 +154,15 @@ def score_item(
             reasons.append(f"Contains underrepresented class: {rarest_cls}")
 
     # 3. Diversity / Structural Entropy Score (heuristics based on multi-object density & spatial spread)
-    if len(boxes) > 4:
-        diversity_score = 0.85
+    if len(boxes) > _DIV_BOX_THRESHOLDS["many"]:
+        diversity_score = _DIV_SCORES["many"]
         reasons.append(f"High scene complexity ({len(boxes)} bounding boxes)")
-    elif len(boxes) > 2:
-        diversity_score = 0.65
+    elif len(boxes) > _DIV_BOX_THRESHOLDS["moderate"]:
+        diversity_score = _DIV_SCORES["moderate"]
     elif len(boxes) == 0:
-        diversity_score = 0.50
+        diversity_score = _DIV_SCORES["none"]
     else:
-        diversity_score = 0.35
+        diversity_score = _DIV_SCORES["few"]
 
     # If no reasons were triggered yet, provide default
     if not reasons:
@@ -179,9 +194,9 @@ def score_item(
 
 def rank_predictions(
     predictions: list[dict],
-    w_unc: float = 0.70,
-    w_rare: float = 0.20,
-    w_div: float = 0.10,
+    w_unc: float = _DEFAULT_W_UNC,
+    w_rare: float = _DEFAULT_W_RARE,
+    w_div: float = _DEFAULT_W_DIV,
     top_k: int | None = None,
 ) -> list[dict]:
     """Rank predictions from Person A to create Person B's queue."""
