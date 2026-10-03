@@ -48,17 +48,17 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
   return (
     <div id="processing-page-root" className="space-y-8 pb-12 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
               AI Annotation in Progress
             </h1>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
               ● Active Stream
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-zinc-400">
+          <p className="text-xs sm:text-sm text-gray-500">
             Round {config.currentRound} &bull; Dataset: {config.datasetName} &bull; Model: {config.modelType} {config.modelVersion}
           </p>
         </div>
@@ -66,7 +66,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs font-semibold text-zinc-300 flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-xs font-semibold text-gray-700 flex items-center gap-1.5 transition-colors shadow-sm"
           >
             {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
             <span>{isPlaying ? 'Pause Stream' : 'Resume'}</span>
@@ -75,7 +75,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
           <button
             id="jump-to-queue-btn"
             onClick={() => setActiveTab('queue')}
-            className="px-4 py-2 text-xs font-bold text-zinc-950 bg-blue-500 hover:bg-blue-400 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 text-xs font-bold text-white bg-gray-900 hover:bg-gray-700 rounded-xl shadow-sm transition-all flex items-center gap-1.5"
           >
             <span>Review Queue ({sentForReview.toLocaleString()})</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -84,21 +84,21 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
       </div>
 
       {/* Large Progress Bar */}
-      <div className="p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between text-xs font-mono font-bold">
-          <div className="flex items-center gap-2 text-zinc-300">
-            <Cpu className="w-4 h-4 text-blue-400" />
+          <div className="flex items-center gap-2 text-gray-500">
+            <Cpu className="w-4 h-4 text-gray-400" />
             <span>AI PROCESSING & ACTIVE INFERENCE PIPELINE</span>
           </div>
-          <span className="text-blue-400">
+          <span className="text-gray-900">
             {processedCount.toLocaleString()} / {totalImages.toLocaleString()} IMAGES ({((processedCount / totalImages) * 100).toFixed(1)}%)
           </span>
         </div>
 
         {/* Animated Bar */}
-        <div className="h-4 w-full bg-zinc-950 rounded-full overflow-hidden p-0.5 border border-zinc-800">
+        <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden p-0.5 border border-gray-200">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 via-indigo-400 to-emerald-400 rounded-full transition-all duration-500 relative"
+            className="h-full bg-gray-400 rounded-full transition-all duration-500 relative"
             style={{ width: `${(processedCount / totalImages) * 100}%` }}
           >
             <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
@@ -107,24 +107,24 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
 
         {/* Live Statistics (4 Cards) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Processed</span>
-            <div className="text-xl font-extrabold font-mono text-white">{processedCount.toLocaleString()}</div>
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Processed</span>
+            <div className="text-xl font-extrabold font-mono text-gray-900">{processedCount.toLocaleString()}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Auto-Accepted</span>
-            <div className="text-xl font-extrabold font-mono text-emerald-400">{autoAccepted.toLocaleString()}</div>
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Auto-Accepted</span>
+            <div className="text-xl font-extrabold font-mono text-emerald-700">{autoAccepted.toLocaleString()}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Sent to Review</span>
-            <div className="text-xl font-extrabold font-mono text-rose-400">{sentForReview.toLocaleString()}</div>
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-red-700">Sent to Review</span>
+            <div className="text-xl font-extrabold font-mono text-red-700">{sentForReview.toLocaleString()}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Skipped / Corrupt</span>
-            <div className="text-xl font-extrabold font-mono text-zinc-500">{skipped}</div>
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Skipped / Corrupt</span>
+            <div className="text-xl font-extrabold font-mono text-gray-500">{skipped}</div>
           </div>
         </div>
       </div>
@@ -132,14 +132,14 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
       {/* LIVE IMAGE STREAM PREVIEW (The core pitch visual for demo!) */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5 text-blue-400" />
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2 section-label">
+            <Zap className="w-3.5 h-3.5 text-gray-400" />
             Live Batch Stream & Routing Decisions
           </h2>
-          <span className="text-[11px] font-mono text-zinc-500">Streaming Frame {currentIndex + 1} of {PIPELINE_STREAM_SAMPLES.length}</span>
+          <span className="text-[11px] font-mono text-gray-500">Streaming Frame {currentIndex + 1} of {PIPELINE_STREAM_SAMPLES.length}</span>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/90 p-6 shadow-2xl">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSample.id}
@@ -150,7 +150,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
             >
               {/* Image Preview with Bounding Box Overlay */}
-              <div className="md:col-span-6 relative rounded-2xl overflow-hidden border border-zinc-700 bg-black aspect-video flex items-center justify-center">
+              <div className="md:col-span-6 relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 aspect-video flex items-center justify-center shadow-sm">
                 <img
                   src={
                     currentSample.class === 'Damaged Building'
@@ -169,13 +169,13 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                 <div
                   className={`absolute inset-6 border-2 ${
                     currentSample.status === 'auto_labeled'
-                      ? 'border-emerald-400 bg-emerald-500/20'
-                      : 'border-dashed border-rose-400 bg-rose-500/20'
+                      ? 'border-emerald-500 bg-emerald-500/10'
+                      : 'border-dashed border-red-500 bg-red-500/10'
                   } rounded-lg flex items-start justify-start p-2`}
                 >
                   <div
                     className={`px-2 py-0.5 rounded text-xs font-mono font-bold text-white shadow flex items-center gap-1 ${
-                      currentSample.status === 'auto_labeled' ? 'bg-emerald-600' : 'bg-rose-600'
+                      currentSample.status === 'auto_labeled' ? 'bg-emerald-600' : 'bg-red-600'
                     }`}
                   >
                     <span>{currentSample.class}</span>
@@ -183,7 +183,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                   </div>
                 </div>
 
-                <div className="absolute top-3 right-3 px-2 py-1 rounded bg-black/80 backdrop-blur-md text-[11px] font-mono text-zinc-300 border border-zinc-700">
+                <div className="absolute top-3 right-3 px-2 py-1 rounded bg-white/80 backdrop-blur-md text-[11px] font-mono text-gray-700 border border-gray-200 shadow-sm">
                   {currentSample.id}
                 </div>
               </div>
@@ -191,19 +191,19 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               {/* Status & Routing Decision Card */}
               <div className="md:col-span-6 space-y-4">
                 <div>
-                  <div className="text-xs text-zinc-400 font-mono mb-1">{currentSample.id} &bull; {currentSample.name}</div>
-                  <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
-                    Class: <span className="text-blue-400">{currentSample.class}</span>
+                  <div className="text-xs text-gray-500 font-mono mb-1">{currentSample.id} &bull; {currentSample.name}</div>
+                  <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                    Class: <span className="text-gray-600">{currentSample.class}</span>
                   </h3>
                 </div>
 
                 {/* Status Badge */}
                 <div
-                  className={`p-4 rounded-xl border ${currentSample.color} space-y-2`}
+                  className={`p-4 rounded-xl border ${currentSample.status === 'auto_labeled' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-red-200 bg-red-50 text-red-900'} space-y-2`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold font-mono tracking-wider flex items-center gap-1.5">
-                      <span>{currentSample.icon}</span>
+                      <span className={currentSample.status === 'auto_labeled' ? 'text-emerald-700' : 'text-red-700'}>{currentSample.icon}</span>
                       <span>{currentSample.statusText}</span>
                     </span>
                     <span className="text-xs font-mono font-bold">
@@ -211,14 +211,14 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                     </span>
                   </div>
 
-                  <div className="text-xs text-zinc-300">
+                  <div className={`text-xs ${currentSample.status === 'auto_labeled' ? 'text-emerald-800' : 'text-red-800'}`}>
                     <strong>Routing Reason:</strong> {currentSample.reason}
                   </div>
                 </div>
 
                 {/* Active Learning Explanation */}
-                <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-xs text-zinc-400 space-y-1">
-                  <div className="text-zinc-300 font-semibold">Active Learning Policy:</div>
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-600 space-y-1">
+                  <div className="text-gray-900 font-semibold">Active Learning Policy:</div>
                   {currentSample.status === 'auto_labeled' ? (
                     <p>
                       Confidence &ge; 85% with low embedding entropy. Bounding coordinates added directly to pseudo-labeled training corpus.
@@ -234,14 +234,14 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                   {currentSample.status !== 'auto_labeled' && (
                     <button
                       onClick={() => setActiveTab('workspace')}
-                      className="px-4 py-2 text-xs font-bold text-zinc-950 bg-blue-500 hover:bg-blue-400 rounded-xl transition-all shadow-md shadow-blue-500/20"
+                      className="px-4 py-2 text-xs font-bold text-white bg-gray-900 hover:bg-gray-700 rounded-xl transition-all shadow-sm"
                     >
                       Annotate This Frame Now →
                     </button>
                   )}
                   <button
                     onClick={() => setActiveTab('queue')}
-                    className="px-4 py-2 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 transition-colors"
+                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-300 transition-colors shadow-sm"
                   >
                     View All Queued Images
                   </button>

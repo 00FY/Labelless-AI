@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem, ActiveLearningRound, NavigationTab } from '../types';
 import { getLabellessEffort, getMethodEffort } from '../data/realMetrics';
+import { Interactive3DBoundingBox } from './Interactive3DBoundingBox';
+import { Interactive3DEmbeddingCluster } from './Interactive3DEmbeddingCluster';
 import {
   Database,
   CheckCircle2,
@@ -70,17 +72,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   return (
     <div id="dashboard-page-root" className="space-y-8 pb-12">
       {/* Dashboard Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
               Annotation Pipeline Dashboard
             </h1>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 text-gray-600">
               Active Round {config.currentRound}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-zinc-400">
+          <p className="text-xs sm:text-sm text-gray-500">
             Monitoring active learning efficiency, routing distribution, and model mAP convergence.
           </p>
         </div>
@@ -89,7 +91,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <button
             id="dash-run-annotation-btn"
             onClick={() => setActiveTab('upload')}
-            className="px-4 py-2 text-xs font-bold text-zinc-950 bg-blue-500 hover:bg-blue-400 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 text-xs font-bold text-white bg-gray-900 hover:bg-gray-700 rounded-xl shadow-sm transition-all flex items-center gap-1.5"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Upload New Batch</span>
@@ -98,70 +100,70 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <button
             id="dash-open-queue-btn"
             onClick={() => setActiveTab('queue')}
-            className="px-4 py-2 text-xs font-bold text-zinc-200 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 text-xs font-bold text-gray-900 bg-white hover:bg-gray-50 rounded-xl border border-gray-300 transition-all flex items-center gap-1.5"
           >
             <span>Review Queue</span>
-            <ArrowRight className="w-3.5 h-3.5 text-blue-400" />
+            <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
           </button>
         </div>
       </div>
 
       {/* SECTION A — DATASET OVERVIEW (4 Cards) */}
       <section className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
           Section A: Dataset & Pipeline Ingestion Overview
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Images */}
           <div
             id="kpi-total-images"
-            className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-2 shadow-lg"
+            className="p-6 rounded-2xl bg-white border border-gray-200 space-y-2 shadow-sm hover:border-gray-300"
           >
-            <div className="flex items-center justify-between text-xs text-zinc-400">
+            <div className="flex items-center justify-between text-xs text-gray-500">
               <span className="font-semibold uppercase tracking-wider">Total Images</span>
-              <Database className="w-4 h-4 text-zinc-400" />
+              <Database className="w-4 h-4 text-gray-400" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-white">{totalImages.toLocaleString()}</div>
-            <p className="text-[11px] text-zinc-500">Disaster response active pool</p>
+            <div className="text-4xl font-extrabold font-mono text-gray-900">{totalImages.toLocaleString()}</div>
+            <p className="text-[11px] text-gray-500">Disaster response active pool</p>
           </div>
 
           {/* Auto-labelled */}
           <div
             id="kpi-auto-labelled"
-            className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-2 shadow-lg group hover:border-emerald-500/40 transition-colors"
+            className="p-6 rounded-2xl bg-white border border-gray-200 space-y-2 shadow-sm hover:border-gray-300 transition-colors"
           >
-            <div className="flex items-center justify-between text-xs text-emerald-400">
-              <span className="font-semibold uppercase tracking-wider">Auto-Labelled</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center justify-between text-xs text-emerald-600">
+              <span className="font-semibold uppercase tracking-wider text-gray-500">Auto-Labelled</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-emerald-400">{autoLabeled.toLocaleString()}</div>
-            <p className="text-[11px] text-zinc-400">{autoPct}% automatically pseudo-labeled</p>
+            <div className="text-4xl font-extrabold font-mono text-gray-900">{autoLabeled.toLocaleString()}</div>
+            <p className="text-[11px] text-gray-500">{autoPct}% automatically pseudo-labeled</p>
           </div>
 
           {/* Human Reviewed */}
           <div
             id="kpi-human-reviewed"
-            className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-2 shadow-lg group hover:border-blue-500/40 transition-colors"
+            className="p-6 rounded-2xl bg-white border border-gray-200 space-y-2 shadow-sm hover:border-gray-300 transition-colors"
           >
-            <div className="flex items-center justify-between text-xs text-blue-400">
-              <span className="font-semibold uppercase tracking-wider">Human Reviewed</span>
-              <Users className="w-4 h-4 text-blue-400" />
+            <div className="flex items-center justify-between text-xs text-blue-600">
+              <span className="font-semibold uppercase tracking-wider text-gray-500">Human Reviewed</span>
+              <Users className="w-4 h-4 text-blue-600" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-blue-300">{humanReviewed.toLocaleString()}</div>
-            <p className="text-[11px] text-zinc-400">{humanPct}% targeted high-value reviews</p>
+            <div className="text-4xl font-extrabold font-mono text-gray-900">{humanReviewed.toLocaleString()}</div>
+            <p className="text-[11px] text-gray-500">{humanPct}% targeted high-value reviews</p>
           </div>
 
           {/* Pending Review */}
           <div
             id="kpi-pending-review"
-            className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-2 shadow-lg group hover:border-rose-500/40 transition-colors"
+            className="p-6 rounded-2xl bg-white border border-gray-200 space-y-2 shadow-sm hover:border-gray-300 transition-colors"
           >
-            <div className="flex items-center justify-between text-xs text-rose-400">
-              <span className="font-semibold uppercase tracking-wider">Pending Review</span>
-              <Clock className="w-4 h-4 text-rose-400" />
+            <div className="flex items-center justify-between text-xs text-red-500">
+              <span className="font-semibold uppercase tracking-wider text-gray-500">Pending Review</span>
+              <Clock className="w-4 h-4 text-red-500" />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-rose-400">{pendingReview}</div>
-            <p className="text-[11px] text-zinc-400">{pendingPct}% in active review queue</p>
+            <div className="text-4xl font-extrabold font-mono text-gray-900">{pendingReview}</div>
+            <p className="text-[11px] text-gray-500">{pendingPct}% in active review queue</p>
           </div>
         </div>
       </section>
@@ -169,46 +171,46 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* SECTION B — THE MOST IMPORTANT VISUAL: "Where is human effort going?" */}
       <section
         id="dash-effort-visual"
-        className="p-6 rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-950 border border-zinc-800 shadow-xl space-y-5"
+        className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5"
       >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-gray-200 pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-zinc-200">
+              <Zap className="w-4 h-4 text-emerald-600" />
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
                 Where is Human Effort Going? (Effort Allocation)
               </h3>
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-gray-500">
               Visual proof that LabelLess AI handles the majority of the pipeline automatically
             </p>
           </div>
 
-          <span className="text-xs font-mono font-bold text-zinc-300 bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-700">
+          <span className="text-xs font-mono font-bold text-gray-600 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200">
             Total Ingested: {totalImages.toLocaleString()} Images
           </span>
         </div>
 
         {/* Large segmented horizontal bar */}
         <div className="space-y-3">
-          <div className="h-8 w-full bg-zinc-950 rounded-xl overflow-hidden flex border border-zinc-800 p-1 gap-1">
+          <div className="h-8 w-full bg-gray-100 rounded-xl overflow-hidden flex p-1 gap-1">
             <div
               style={{ width: `${autoPct}%` }}
-              className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-lg flex items-center justify-center text-xs font-mono font-bold text-zinc-950 shadow transition-all duration-500"
+              className="h-full bg-emerald-100 text-emerald-800 rounded-lg flex items-center justify-center text-xs font-mono font-bold transition-all duration-500"
               title={`Auto-labelled: ${autoLabeled} (${autoPct}%)`}
             >
               {autoPct}%
             </div>
             <div
               style={{ width: `${humanPct}%` }}
-              className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg flex items-center justify-center text-xs font-mono font-bold text-zinc-950 shadow transition-all duration-500"
+              className="h-full bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center text-xs font-mono font-bold transition-all duration-500"
               title={`Human-reviewed: ${humanReviewed} (${humanPct}%)`}
             >
               {humanPct}%
             </div>
             <div
               style={{ width: `${pendingPct}%` }}
-              className="h-full bg-gradient-to-r from-rose-600 to-rose-400 rounded-lg flex items-center justify-center text-xs font-mono font-bold text-white shadow transition-all duration-500"
+              className="h-full bg-red-100 text-red-800 rounded-lg flex items-center justify-center text-xs font-mono font-bold transition-all duration-500"
               title={`Pending review: ${pendingReview} (${pendingPct}%)`}
             >
               {pendingPct}%
@@ -217,37 +219,46 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           {/* Legend Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800">
-              <div className="w-3.5 h-3.5 rounded-md bg-emerald-400 shrink-0"></div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
+              <div className="w-3.5 h-3.5 rounded-md bg-emerald-100 border border-emerald-200 shrink-0"></div>
               <div>
-                <div className="text-xs font-bold text-zinc-200">
+                <div className="text-xs font-bold text-gray-900">
                   {autoPct}% Auto-labelled ({autoLabeled.toLocaleString()} imgs)
                 </div>
-                <div className="text-[11px] text-zinc-400">Zero human intervention needed</div>
+                <div className="text-[11px] text-gray-500">Zero human intervention needed</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800">
-              <div className="w-3.5 h-3.5 rounded-md bg-blue-400 shrink-0"></div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
+              <div className="w-3.5 h-3.5 rounded-md bg-gray-200 border border-gray-300 shrink-0"></div>
               <div>
-                <div className="text-xs font-bold text-zinc-200">
+                <div className="text-xs font-bold text-gray-900">
                   {humanPct}% Human-reviewed ({humanReviewed.toLocaleString()} imgs)
                 </div>
-                <div className="text-[11px] text-zinc-400">High gradient active retraining data</div>
+                <div className="text-[11px] text-gray-500">High gradient active retraining data</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800">
-              <div className="w-3.5 h-3.5 rounded-md bg-rose-400 shrink-0"></div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
+              <div className="w-3.5 h-3.5 rounded-md bg-red-100 border border-red-200 shrink-0"></div>
               <div>
-                <div className="text-xs font-bold text-zinc-200">
+                <div className="text-xs font-bold text-gray-900">
                   {pendingPct}% Pending Queue ({pendingReview.toLocaleString()} imgs)
                 </div>
-                <div className="text-[11px] text-zinc-400">Ranked by expected model gain</div>
+                <div className="text-[11px] text-gray-500">Ranked by expected model gain</div>
               </div>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* 3D EMBEDDING SPACE POINT CLOUD CLUSTER */}
+      <section className="w-full">
+        <Interactive3DEmbeddingCluster
+          datasetItems={datasetItems}
+          onSelectImage={onSelectImage}
+          className="w-full"
+        />
       </section>
 
       {/* SECTION C & SECTION E: Model Performance Graph & Why AI Asks For Help */}
@@ -255,77 +266,77 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* SECTION C — MODEL PERFORMANCE GRAPH (R1 to R4) */}
         <section
           id="dash-model-performance"
-          className="lg:col-span-7 p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-5 flex flex-col justify-between"
+          className="lg:col-span-7 p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5 flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-extrabold uppercase tracking-wider text-zinc-200">
+                <TrendingUp className="w-4 h-4 text-gray-400" />
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
                   Model Improvement Across Active-Learning Rounds
                 </h3>
               </div>
-              <span className="text-xs font-bold font-mono text-emerald-400">
+              <span className="text-xs font-bold font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
                 +27.5% Active Learning Gain (60.9% → 88.4%)
               </span>
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-gray-500">
               Proves that human feedback on prioritized uncertain samples rapidly elevates YOLOv8 accuracy.
             </p>
           </div>
 
           {/* Interactive Chart Visual */}
-          <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-4">
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-4">
             {/* SVG Stepped Curve Chart */}
             <div className="relative h-44 w-full">
               <svg className="w-full h-full" viewBox="0 0 400 140" preserveAspectRatio="none">
                 {/* Horizontal Grid lines */}
-                <line x1="30" y1="15" x2="390" y2="15" stroke="#27272a" strokeDasharray="3 3" strokeWidth="0.8" />
-                <line x1="30" y1="50" x2="390" y2="50" stroke="#27272a" strokeDasharray="3 3" strokeWidth="0.8" />
-                <line x1="30" y1="85" x2="390" y2="85" stroke="#27272a" strokeDasharray="3 3" strokeWidth="0.8" />
-                <line x1="30" y1="120" x2="390" y2="120" stroke="#27272a" strokeDasharray="3 3" strokeWidth="0.8" />
+                <line x1="30" y1="15" x2="390" y2="15" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
+                <line x1="30" y1="50" x2="390" y2="50" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
+                <line x1="30" y1="85" x2="390" y2="85" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
+                <line x1="30" y1="120" x2="390" y2="120" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
 
                 {/* Y-axis labels */}
-                <text x="5" y="18" fill="#a1a1aa" fontSize="9" fontFamily="monospace">90%</text>
-                <text x="5" y="53" fill="#a1a1aa" fontSize="9" fontFamily="monospace">80%</text>
-                <text x="5" y="88" fill="#a1a1aa" fontSize="9" fontFamily="monospace">70%</text>
-                <text x="5" y="123" fill="#a1a1aa" fontSize="9" fontFamily="monospace">60%</text>
+                <text x="5" y="18" fill="#6b7280" fontSize="9" fontFamily="monospace">90%</text>
+                <text x="5" y="53" fill="#6b7280" fontSize="9" fontFamily="monospace">80%</text>
+                <text x="5" y="88" fill="#6b7280" fontSize="9" fontFamily="monospace">70%</text>
+                <text x="5" y="123" fill="#6b7280" fontSize="9" fontFamily="monospace">60%</text>
 
                 {/* Shaded Area under curve */}
                 <path
                   d="M 50 118 L 120 82 L 190 52 L 260 34 L 330 20 L 330 130 L 50 130 Z"
                   fill="url(#gradMap)"
-                  opacity="0.25"
+                  opacity="0.3"
                 />
 
                 {/* Main Curve Line */}
                 <path
                   d="M 50 118 L 120 82 L 190 52 L 260 34 L 330 20"
                   fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="3.5"
+                  stroke="#111827"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
 
                 {/* Round Points */}
-                <circle cx="50" cy="118" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="120" cy="82" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="190" cy="52" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="260" cy="34" r="5" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="2" />
-                <circle cx="330" cy="20" r="6" fill="#10B981" stroke="#34D399" strokeWidth="2.5" />
+                <circle cx="50" cy="118" r="4" fill="#111827" />
+                <circle cx="120" cy="82" r="4" fill="#111827" />
+                <circle cx="190" cy="52" r="4" fill="#111827" />
+                <circle cx="260" cy="34" r="4" fill="#111827" />
+                <circle cx="330" cy="20" r="5" fill="#059669" stroke="#fff" strokeWidth="2" />
 
                 {/* Point text */}
-                <text x="40" y="108" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">60.9%</text>
-                <text x="110" y="72" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">71.2%</text>
-                <text x="180" y="42" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">79.8%</text>
-                <text x="250" y="24" fill="#e4e4e7" fontSize="10" fontWeight="bold" fontFamily="monospace">85.1%</text>
-                <text x="320" y="12" fill="#34D399" fontSize="11" fontWeight="bold" fontFamily="monospace">88.4%</text>
+                <text x="40" y="108" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">60.9%</text>
+                <text x="110" y="72" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">71.2%</text>
+                <text x="180" y="42" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">79.8%</text>
+                <text x="250" y="24" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">85.1%</text>
+                <text x="320" y="12" fill="#059669" fontSize="11" fontWeight="bold" fontFamily="monospace">88.4%</text>
 
                 <defs>
                   <linearGradient id="gradMap" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#09090b" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#d1d5db" />
+                    <stop offset="100%" stopColor="#f3f4f6" stopOpacity="0" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -339,22 +350,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   onClick={() => setSelectedRoundIndex(idx)}
                   className={`p-2 rounded-xl text-center transition-all border ${
                     selectedRoundIndex === idx
-                      ? 'bg-blue-500/20 border-blue-500/50 text-white shadow-sm'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-white border-gray-400 text-gray-900 shadow-sm'
+                      : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <div className="text-[10px] font-bold text-zinc-400">Round {r.round}</div>
-                  <div className="text-xs font-mono font-bold text-blue-400">{r.mAP50}%</div>
+                  <div className="text-[10px] font-bold text-gray-400">Round {r.round}</div>
+                  <div className={`text-xs font-mono font-bold ${selectedRoundIndex === idx ? 'text-gray-900' : 'text-gray-600'}`}>{r.mAP50}%</div>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-zinc-400 pt-1">
-            <span>Current Evaluated Model: <strong className="text-zinc-200">YOLOv8 v2.3</strong></span>
+          <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
+            <span>Current Evaluated Model: <strong className="text-gray-900">YOLOv8 v2.3</strong></span>
             <button
               onClick={() => setActiveTab('evolution')}
-              className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+              className="text-gray-600 hover:text-gray-900 font-semibold flex items-center gap-1"
             >
               Detailed Breakdown & Class Matrix →
             </button>
@@ -364,32 +375,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* SECTION E — WHY IS AI ASKING FOR HUMAN HELP? (Donut & Innovation Feature) */}
         <section
           id="dash-why-human-review"
-          className="lg:col-span-5 p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-5 flex flex-col justify-between"
+          className="lg:col-span-5 p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5 flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <PieIcon className="w-4 h-4 text-blue-400" />
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-zinc-200">
+              <PieIcon className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
                 Why is AI Asking for Human Help?
               </h3>
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-gray-500">
               Not just confidence thresholding: intelligent multi-factor triage
             </p>
           </div>
 
+          {/* Functional 3D Spatial Bounding Box Inspector */}
+          <Interactive3DBoundingBox className="w-full" />
+
           {/* Breakdown visualization */}
-          <div className="space-y-3.5 p-4 rounded-xl bg-zinc-950/70 border border-zinc-800">
+          <div className="space-y-3.5 p-4 rounded-xl bg-gray-50 border border-gray-200">
             {/* Factor 1: Uncertainty */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-amber-300 font-semibold">
-                  <AlertTriangle className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                   Model Uncertainty (High Entropy)
                 </span>
-                <span className="font-mono font-bold text-zinc-200">{uncPct}%</span>
+                <span className="font-mono font-bold text-gray-900">{uncPct}%</span>
               </div>
-              <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                 <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${uncPct}%` }}></div>
               </div>
             </div>
@@ -397,27 +411,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {/* Factor 2: Rare Class */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-rose-300 font-semibold">
-                  <Flame className="w-3.5 h-3.5" />
-                  Rare Class (Fire, Damaged Building)
+                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
+                  <Flame className="w-3.5 h-3.5 text-red-500" />
+                  Rare Class (Fire, Debris)
                 </span>
-                <span className="font-mono font-bold text-zinc-200">{rarePct}%</span>
+                <span className="font-mono font-bold text-gray-900">{rarePct}%</span>
               </div>
-              <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-rose-400 rounded-full transition-all duration-500" style={{ width: `${rarePct}%` }}></div>
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-red-400 rounded-full transition-all duration-500" style={{ width: `${rarePct}%` }}></div>
               </div>
             </div>
 
             {/* Factor 3: Novel/Diverse Image */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-blue-300 font-semibold">
-                  <Layers className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
+                  <Layers className="w-3.5 h-3.5 text-blue-500" />
                   Novel / Outlier Embedding
                 </span>
-                <span className="font-mono font-bold text-zinc-200">{divPct}%</span>
+                <span className="font-mono font-bold text-gray-900">{divPct}%</span>
               </div>
-              <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                 <div className="h-full bg-blue-400 rounded-full transition-all duration-500" style={{ width: `${divPct}%` }}></div>
               </div>
             </div>
@@ -425,20 +439,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {/* Factor 4: Other */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-zinc-400 font-semibold">
-                  <Info className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
+                  <Info className="w-3.5 h-3.5 text-gray-400" />
                   Boundary Jitter / Clustered Boxes
                 </span>
-                <span className="font-mono font-bold text-zinc-200">{otherPct}%</span>
+                <span className="font-mono font-bold text-gray-900">{otherPct}%</span>
               </div>
-              <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-zinc-600 rounded-full transition-all duration-500" style={{ width: `${otherPct}%` }}></div>
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gray-400 rounded-full transition-all duration-500" style={{ width: `${otherPct}%` }}></div>
               </div>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-start gap-2">
-            <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-xl bg-gray-100 border border-gray-200 text-xs text-gray-600 flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
             <span>
               <strong>Active Learning Gain:</strong> Reviewing these specific images provides 3.8x faster convergence than random verification.
             </span>
@@ -451,24 +465,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* SECTION D — REVIEW QUEUE (High Priority Snippet) */}
         <section
           id="dash-review-queue-snippet"
-          className="lg:col-span-7 p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4"
+          className="lg:col-span-7 p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4"
         >
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 animate-pulse"></span>
-                <h3 className="text-sm font-extrabold uppercase tracking-wider text-zinc-200">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
                   High Priority Review Queue
                 </h3>
               </div>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-gray-500">
                 {pendingHighPriority.length} images require immediate review for next retraining round
               </p>
             </div>
 
             <button
               onClick={() => setActiveTab('queue')}
-              className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20"
+              className="text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200"
             >
               <span>Full Queue ({totalImages.toLocaleString()})</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -476,9 +490,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950/70">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-zinc-800 bg-zinc-900/80 text-[10px] font-extrabold uppercase tracking-wider text-zinc-400">
+              <thead className="border-b border-gray-200 bg-gray-50 text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
                 <tr>
                   <th className="px-3 py-2.5">Image</th>
                   <th className="px-3 py-2.5">Predicted Class</th>
@@ -487,11 +501,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <th className="px-3 py-2.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60 font-medium">
+              <tbody className="divide-y divide-gray-100 font-medium">
                 {pendingHighPriority.slice(0, 3).map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-zinc-900/50 transition-colors group cursor-pointer"
+                    className="hover:bg-gray-50 transition-colors group cursor-pointer"
                     onClick={() => onSelectImage(item)}
                   >
                     <td className="px-3 py-2.5">
@@ -504,23 +518,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             target.onerror = null;
                             target.src = '/predictions/00f205aea57febc8e82d4e99a18b1d51.png';
                           }}
-                          className="w-10 h-7 rounded object-cover border border-zinc-700 shrink-0"
+                          className="w-10 h-7 rounded object-cover border border-gray-200 shrink-0"
                         />
-                        <span className="font-mono font-bold text-zinc-200 group-hover:text-blue-400">
+                        <span className="font-mono font-bold text-gray-900">
                           {item.id}
                         </span>
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
                         {item.predictedClass}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-amber-400 font-semibold">
+                    <td className="px-3 py-2.5 font-mono text-gray-600 font-semibold">
                       {(item.confidence * 100).toFixed(0)}%
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-800/60 flex items-center gap-1 w-fit">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-red-50 text-red-600 border border-red-100 flex items-center gap-1 w-fit">
                         <span>🔴</span>
                         <span>{item.priorityScore.toFixed(2)}</span>
                       </span>
@@ -532,7 +546,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             e.stopPropagation();
                             onExplainItem(item);
                           }}
-                          className="px-2 py-1 text-[10px] font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 transition-colors"
+                          className="px-2 py-1 text-[10px] font-semibold text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-50 rounded border border-gray-300 transition-colors"
                         >
                           Explain
                         </button>
@@ -541,7 +555,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             e.stopPropagation();
                             onSelectImage(item);
                           }}
-                          className="px-2.5 py-1 text-[10px] font-bold text-zinc-950 bg-blue-400 hover:bg-blue-300 rounded shadow transition-all"
+                          className="px-2.5 py-1 text-[10px] font-bold text-white bg-gray-900 hover:bg-gray-700 rounded shadow-sm transition-all"
                         >
                           Annotate →
                         </button>
@@ -557,62 +571,62 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* SECTION F — HUMAN EFFORT TRACKING & DATASET HEALTH */}
         <section
           id="dash-effort-tracker"
-          className="lg:col-span-5 p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4"
+          className="lg:col-span-5 p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4"
         >
           <div>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-zinc-200">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
                 Human Effort & Time Tracking
               </h3>
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-gray-500">
               Calculated real time savings for dataset round
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-3">
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Random / Confidence Baseline ({randomEffort?.human_review_pct.toFixed(0) || 50}% review):</span>
-              <span className="font-mono font-bold text-zinc-300">{randomEffort?.human_hours_spent.toFixed(2) || '3.33'} Hours</span>
+              <span className="text-gray-500">Random / Confidence Baseline ({randomEffort?.human_review_pct.toFixed(0) || 41}% review):</span>
+              <span className="font-mono font-bold text-gray-700">{randomEffort?.human_hours_spent.toFixed(2) || '3.33'} Hours</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-blue-400 font-semibold">With LabelLess Active Pipeline ({effort.human_review_pct.toFixed(1)}% review):</span>
-              <span className="font-mono font-bold text-blue-400">{effort.human_hours_spent.toFixed(2)} Hours</span>
+              <span className="text-gray-700 font-semibold">With LabelLess Active Pipeline ({effort.human_review_pct.toFixed(1)}% review):</span>
+              <span className="font-mono font-bold text-gray-900">{effort.human_hours_spent.toFixed(2)} Hours</span>
             </div>
-            <div className="h-px bg-zinc-800"></div>
+            <div className="h-px bg-gray-200"></div>
             <div className="flex items-center justify-between text-sm font-bold">
-              <span className="text-emerald-400 flex items-center gap-1.5">
+              <span className="text-emerald-600 flex items-center gap-1.5">
                 <Check className="w-4 h-4" />
                 Net Time Saved:
               </span>
-              <span className="font-mono text-emerald-400 text-base">
+              <span className="font-mono text-emerald-600 text-base">
                 {effort.human_hours_saved_vs_baseline.toFixed(2)} Hours Saved ({effort.effort_reduction_vs_baseline_pct.toFixed(1)}%)
               </span>
             </div>
           </div>
 
           {/* Dataset Health Indicators */}
-          <div className="p-3.5 rounded-xl bg-zinc-950/50 border border-zinc-800 space-y-2">
-            <div className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">
+          <div className="p-3.5 rounded-xl bg-white border border-gray-200 space-y-2">
+            <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
               Dataset Health Audit
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800">
-                <span className="text-zinc-400">Class Balance:</span>
-                <span className="text-emerald-400 font-semibold">Good</span>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                <span className="text-gray-500">Class Balance:</span>
+                <span className="text-emerald-600 font-semibold">Good</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800">
-                <span className="text-zinc-400">Rare Classes:</span>
-                <span className="text-amber-400 font-semibold">2 Flagged</span>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                <span className="text-gray-500">Rare Classes:</span>
+                <span className="text-amber-600 font-semibold">2 Flagged</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800">
-                <span className="text-zinc-400">Image Quality:</span>
-                <span className="text-emerald-400 font-semibold">High Res</span>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                <span className="text-gray-500">Image Quality:</span>
+                <span className="text-emerald-600 font-semibold">High Res</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800">
-                <span className="text-zinc-400">Missing Labels:</span>
-                <span className="text-emerald-400 font-semibold">0</span>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                <span className="text-gray-500">Missing Labels:</span>
+                <span className="text-emerald-600 font-semibold">0</span>
               </div>
             </div>
           </div>

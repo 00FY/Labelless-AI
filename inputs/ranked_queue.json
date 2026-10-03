@@ -3485,7 +3485,7 @@
       "uncertainty_score": 0.6201,
       "diversity_score": 0.65,
       "rare_class_score": 0.8001,
-      "avg_confidence": 0.4264,
+      "avg_confidence": 0.4263,
       "detection_count": 4,
       "reason": "Low average model confidence (42.6%)",
       "reasons": [
@@ -8026,10 +8026,10 @@
     {
       "image_id": "wildfire_newsmoke1_mp4-107_jpg.rf.7f9b1eb891a02a933226269d6e245fbd.jpg",
       "priority_score": 0.5576,
-      "uncertainty_score": 0.4751,
+      "uncertainty_score": 0.475,
       "diversity_score": 0.65,
       "rare_class_score": 0.8001,
-      "avg_confidence": 0.5738,
+      "avg_confidence": 0.5739,
       "detection_count": 4,
       "reason": "Low average model confidence (57.4%)",
       "reasons": [
@@ -8137,10 +8137,10 @@
     {
       "image_id": "03db54200069482ff87cab702a6be150.png",
       "priority_score": 0.5555,
-      "uncertainty_score": 0.6325,
+      "uncertainty_score": 0.6326,
       "diversity_score": 0.85,
       "rare_class_score": 0.1385,
-      "avg_confidence": 0.4296,
+      "avg_confidence": 0.4295,
       "detection_count": 12,
       "reason": "Low average model confidence (43.0%)",
       "reasons": [
@@ -31881,7 +31881,7 @@
       "uncertainty_score": 0.5605,
       "diversity_score": 0.65,
       "rare_class_score": 0.1385,
-      "avg_confidence": 0.4667,
+      "avg_confidence": 0.4668,
       "detection_count": 4,
       "reason": "Low average model confidence (46.7%)",
       "reasons": [
@@ -39554,9 +39554,9 @@
       "rare_class_score": 0.1385,
       "avg_confidence": 0.5985,
       "detection_count": 5,
-      "reason": "Low average model confidence (59.9%)",
+      "reason": "Low average model confidence (59.8%)",
       "reasons": [
-        "Low average model confidence (59.9%)",
+        "Low average model confidence (59.8%)",
         "High scene complexity (5 bounding boxes)"
       ],
       "predictions": [
