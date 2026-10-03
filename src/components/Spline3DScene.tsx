@@ -23,18 +23,22 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class SplineErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class SplineErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  declare props: ErrorBoundaryProps;
+  state: ErrorBoundaryState = { hasError: false };
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
+    this.props = props;
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error) {
-    console.warn('Spline 3D Scene Error caught:', error);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.warn('Spline 3D Scene Error caught:', error, errorInfo);
   }
 
   render() {
