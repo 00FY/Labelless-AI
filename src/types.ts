@@ -1,6 +1,7 @@
 export type NavigationTab =
   | 'landing'
   | 'dashboard'
+  | 'evidence'
   | 'upload'
   | 'processing'
   | 'queue'

@@ -16,6 +16,7 @@ import { ProcessingPage } from './components/ProcessingPage';
 import { SmartReviewQueuePage } from './components/SmartReviewQueuePage';
 import { AnnotationWorkspacePage } from './components/AnnotationWorkspacePage';
 import { EvolutionImpactPage } from './components/EvolutionImpactPage';
+import { EvidencePage } from './components/EvidencePage';
 import { ExportPage } from './components/ExportPage';
 import { ExplainDecisionModal } from './components/ExplainDecisionModal';
 
@@ -144,7 +145,7 @@ export const App: React.FC = () => {
             )}
 
             {/* Empty state — no data loaded */}
-            {!isLoading && datasetItems.length === 0 && activeTab !== 'landing' && activeTab !== 'upload' && activeTab !== 'datasets' && activeTab !== 'settings' && activeTab !== 'evolution' && activeTab !== 'model_improvement' && activeTab !== 'retrain' && activeTab !== 'processing' && (
+            {!isLoading && datasetItems.length === 0 && activeTab !== 'landing' && activeTab !== 'evidence' && activeTab !== 'upload' && activeTab !== 'datasets' && activeTab !== 'settings' && activeTab !== 'evolution' && activeTab !== 'model_improvement' && activeTab !== 'retrain' && activeTab !== 'processing' && (
               <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-3xl">📂</div>
                 <h2 className="text-lg font-bold text-zinc-200">No Dataset Loaded</h2>
@@ -160,6 +161,10 @@ export const App: React.FC = () => {
                   Go to Upload
                 </button>
               </div>
+            )}
+
+            {!isLoading && activeTab === 'evidence' && (
+              <EvidencePage setActiveTab={setActiveTab} />
             )}
 
             {!isLoading && activeTab === 'landing' && (

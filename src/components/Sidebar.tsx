@@ -11,6 +11,7 @@ import {
   Download,
   Settings,
   Sparkles,
+  FileCheck2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -49,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       group: 'ACTIVE LEARNING',
       items: [
         { id: 'evolution', label: 'Model Impact', icon: TrendingUp, badge: null },
+        { id: 'evidence', label: 'Experiment Evidence', icon: FileCheck2, badge: 'Verified' },
         { id: 'processing', label: 'Auto Annotation', icon: Cpu, badge: null },
         { id: 'upload', label: 'Datasets & Setup', icon: UploadCloud, badge: null },
       ],

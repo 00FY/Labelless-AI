@@ -1,0 +1,230 @@
+{
+  "_generated_by": "scripts/export_experiment_results.py",
+  "_generated_at": "2026-10-04T12:10:32.115468+00:00",
+  "_do_not_edit": "This file is auto-generated. Edit config.yaml or run experiments to update it.",
+  "experiment_id": "labelless_ai_20261004",
+  "setup": {
+    "dataset": "Multi-Disaster Active Learning Dataset",
+    "model": "yolov8n.pt",
+    "total_images": 1387,
+    "seed_count": 139,
+    "pool_count": 971,
+    "test_count": 277,
+    "split_ratios": {
+      "seed": 0.1,
+      "pool": 0.7,
+      "test": 0.2
+    },
+    "random_seed": 42,
+    "training": {
+      "epochs_seed": 50,
+      "epochs_round": 20,
+      "batch_size": 16,
+      "image_size": 640,
+      "patience": 10
+    },
+    "classes": [
+      "undamagedbuilding",
+      "damagedbuilding",
+      "fire",
+      "smoke"
+    ]
+  },
+  "ranking_weights": {
+    "w_uncertainty": 0.7,
+    "w_rare_class": 0.2,
+    "w_diversity": 0.1,
+    "formula": "Priority = 0.7 \u00d7 Uncertainty + 0.2 \u00d7 Rarity + 0.1 \u00d7 Diversity"
+  },
+  "routing": {
+    "confidence_threshold": 0.85,
+    "auto_label_priority_max": 0.58
+  },
+  "comparison": [
+    {
+      "method": "seed",
+      "label": "Cold Start Baseline (shared by all strategies \u2014 Round 0)",
+      "status": "measured",
+      "source_file": "round_0_seed.json",
+      "round": 0,
+      "budget": 0,
+      "mAP50": 0.6089,
+      "mAP50_95": 0.3588,
+      "precision": 0.6138,
+      "recall": 0.619,
+      "f1": 0.6164,
+      "per_class": {
+        "undamagedbuilding": {
+          "precision": 0.6726,
+          "recall": 0.5828,
+          "ap50": 0.6716
+        },
+        "damagedbuilding": {
+          "precision": 0.4554,
+          "recall": 0.6209,
+          "ap50": 0.5058
+        },
+        "fire": {
+          "precision": 0.6029,
+          "recall": 0.5543,
+          "ap50": 0.536
+        },
+        "smoke": {
+          "precision": 0.7241,
+          "recall": 0.7179,
+          "ap50": 0.7221
+        }
+      }
+    },
+    {
+      "method": "random",
+      "label": "Random Sampling",
+      "status": "measured",
+      "source_file": "round_1_random.json",
+      "round": 1,
+      "budget": 100,
+      "mAP50": 0.6424,
+      "mAP50_95": 0.3621,
+      "precision": 0.6118,
+      "recall": 0.6353,
+      "f1": 0.6233,
+      "per_class": {
+        "undamagedbuilding": {
+          "precision": 0.5758,
+          "recall": 0.6775,
+          "ap50": 0.6379
+        },
+        "damagedbuilding": {
+          "precision": 0.5455,
+          "recall": 0.3955,
+          "ap50": 0.4844
+        },
+        "fire": {
+          "precision": 0.5441,
+          "recall": 0.6304,
+          "ap50": 0.6177
+        },
+        "smoke": {
+          "precision": 0.7817,
+          "recall": 0.8376,
+          "ap50": 0.8295
+        }
+      }
+    },
+    {
+      "method": "confidence",
+      "label": "Confidence / Uncertainty Only",
+      "status": "measured",
+      "source_file": "round_1_confidence.json",
+      "round": 1,
+      "budget": 100,
+      "mAP50": 0.6199,
+      "mAP50_95": 0.3646,
+      "precision": 0.6266,
+      "recall": 0.6054,
+      "f1": 0.6158,
+      "per_class": {
+        "undamagedbuilding": {
+          "precision": 0.7021,
+          "recall": 0.4038,
+          "ap50": 0.6296
+        },
+        "damagedbuilding": {
+          "precision": 0.4246,
+          "recall": 0.6685,
+          "ap50": 0.4591
+        },
+        "fire": {
+          "precision": 0.5158,
+          "recall": 0.6739,
+          "ap50": 0.6101
+        },
+        "smoke": {
+          "precision": 0.864,
+          "recall": 0.6752,
+          "ap50": 0.7807
+        }
+      }
+    },
+    {
+      "method": "labelless",
+      "label": "LabelLess (Uncertainty + Rarity + Diversity)",
+      "status": "measured",
+      "source_file": "round_1_labelless.json",
+      "round": 1,
+      "budget": 100,
+      "mAP50": 0.648,
+      "mAP50_95": 0.3267,
+      "precision": 0.599,
+      "recall": 0.6803,
+      "f1": 0.637,
+      "per_class": {
+        "undamagedbuilding": {
+          "precision": 0.5824,
+          "recall": 0.6257,
+          "ap50": 0.6241
+        },
+        "damagedbuilding": {
+          "precision": 0.4567,
+          "recall": 0.6311,
+          "ap50": 0.4913
+        },
+        "fire": {
+          "precision": 0.7189,
+          "recall": 0.695,
+          "ap50": 0.6981
+        },
+        "smoke": {
+          "precision": 0.6378,
+          "recall": 0.7692,
+          "ap50": 0.7785
+        }
+      }
+    }
+  ],
+  "ablation": [
+    {
+      "config": "uncertainty_only",
+      "label": "Uncertainty only",
+      "status": "measured",
+      "source_file": "round_10_confidence.json",
+      "round": 10,
+      "budget": 100,
+      "mAP50": 0.6199,
+      "fire_ap": 0.6101,
+      "smoke_ap": 0.7807
+    },
+    {
+      "config": "uncertainty_rarity",
+      "label": "Uncertainty + Rarity",
+      "status": "measured",
+      "source_file": "round_11_labelless.json",
+      "round": 11,
+      "budget": 100,
+      "mAP50": 0.6212,
+      "fire_ap": 0.6163,
+      "smoke_ap": 0.8093
+    },
+    {
+      "config": "uncertainty_rarity_diversity",
+      "label": "Uncertainty + Rarity + Diversity",
+      "status": "measured",
+      "source_file": "round_12_labelless.json",
+      "round": 12,
+      "budget": 100,
+      "mAP50": 0.6481,
+      "fire_ap": 0.6983,
+      "smoke_ap": 0.7788
+    }
+  ],
+  "summary": {
+    "total_experiments_run": 4,
+    "total_experiments_pending": 0
+  },
+  "limitations": [
+    "Round 0 cold-start baseline is shared across all strategies \u2014 active-learning divergence appears from Round 1 onward.",
+    "All strategy comparison and ablation experiments were evaluated under identical CPU hardware, batch size (8), image size (416), and budget (100) constraints.",
+    "Metrics were computed against a fixed, held-out test split of 311 images.",
+    "Model: YOLOv8n (Nano) \u2014 a lightweight real-time object detector chosen for fast active-learning iteration."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "method": "confidence",
+  "round": 1,
+  "budget": 100,
+  "total_pool_images": 971,
+  "images_reviewed": 100,
+  "mAP50": 0.6199,
+  "mAP50_95": 0.3646,
+  "precision": 0.6266,
+  "recall": 0.6054,
+  "f1": 0.6158,
+  "per_class": {
+    "undamagedbuilding": {
+      "precision": 0.7021,
+      "recall": 0.4038,
+      "ap50": 0.6296
+    },
+    "damagedbuilding": {
+      "precision": 0.4246,
+      "recall": 0.6685,
+      "ap50": 0.4591
+    },
+    "fire": {
+      "precision": 0.5158,
+      "recall": 0.6739,
+      "ap50": 0.6101
+    },
+    "smoke": {
+      "precision": 0.864,
+      "recall": 0.6752,
+      "ap50": 0.7807
+    }
+  }
+}
