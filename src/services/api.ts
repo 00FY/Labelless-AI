@@ -39,6 +39,40 @@ export interface RoundAdvanceResponse {
   message: string;
 }
 
+// Browser-side copy of review decisions, so a static deployment without the
+// FastAPI backend keeps a reviewer's work across page reloads.
+const LOCAL_REVIEWS_KEY = 'labelless_reviews_v1';
+
+type LocalReview = Pick<DatasetItem, 'status' | 'boxes' | 'feedbackCategory' | 'aiAssistedSec'>;
+
+function readLocalReviews(): Record<string, LocalReview> {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_REVIEWS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+export function saveLocalReview(item: DatasetItem): void {
+  try {
+    const reviews = readLocalReviews();
+    reviews[item.id] = {
+      status: item.status,
+      boxes: item.boxes,
+      feedbackCategory: item.feedbackCategory,
+      aiAssistedSec: item.aiAssistedSec,
+    };
+    localStorage.setItem(LOCAL_REVIEWS_KEY, JSON.stringify(reviews));
+  } catch {
+    // Storage unavailable (private mode, quota): the in-memory state still holds the edit
+  }
+}
+
+function applyLocalReviews(items: DatasetItem[]): DatasetItem[] {
+  const reviews = readLocalReviews();
+  return items.map((item) => (reviews[item.id] ? { ...item, ...reviews[item.id] } : item));
+}
+
 /**
  * Check if the FastAPI backend is live and healthy.
  */
@@ -74,8 +108,8 @@ export async function fetchQueue(): Promise<{ items: DatasetItem[]; isLiveBacken
   if (!staticRes.ok) {
     throw new Error('Failed to load dataset queue from API or static file');
   }
-  const items = await staticRes.json();
-  return { items, isLiveBackend: false };
+  const items: DatasetItem[] = await staticRes.json();
+  return { items: applyLocalReviews(items), isLiveBackend: false };
 }
 
 /**

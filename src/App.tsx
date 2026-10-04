@@ -20,7 +20,7 @@ import { EvidencePage } from './components/EvidencePage';
 import { ExportPage } from './components/ExportPage';
 import { ExplainDecisionModal } from './components/ExplainDecisionModal';
 
-import { fetchQueue, submitHumanLabel } from './services/api';
+import { fetchQueue, submitHumanLabel, saveLocalReview } from './services/api';
 
 export const App: React.FC = () => {
   const getUrlTab = (): NavigationTab => {
@@ -58,6 +58,7 @@ export const App: React.FC = () => {
     null
   );
   const [explainItem, setExplainItem] = useState<DatasetItem | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
   // Load pipeline config and real active-learning ranked data
   React.useEffect(() => {
@@ -85,11 +86,14 @@ export const App: React.FC = () => {
   const handleUpdateItem = (updated: DatasetItem) => {
     setDatasetItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
     setSelectedItemForWorkspace(updated);
-    // Persist human review to backend / disk
-    submitHumanLabel(
-      updated,
-      updated.status || 'human_reviewed'
-    );
+    // Keep a browser copy, then persist to the backend (data/reviewed_labels.json)
+    saveLocalReview(updated);
+    submitHumanLabel(updated, updated.status || 'human_reviewed').then((ok) => {
+      if (!ok) {
+        setSaveNotice('Backend not reachable: this review is saved in this browser only.');
+        setTimeout(() => setSaveNotice(null), 4000);
+      }
+    });
   };
 
   // Switch to workspace with specific item
@@ -232,6 +236,15 @@ export const App: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {saveNotice && (
+        <div
+          role="status"
+          className="fixed bottom-4 left-4 z-50 max-w-sm px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium shadow-sm"
+        >
+          {saveNotice}
+        </div>
+      )}
 
       {/* "Why This Image?" Active Learning Diagnostic Modal (Innovation pitch highlight) */}
       <ExplainDecisionModal

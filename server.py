@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # Ensure UTF-8 output on Windows
 if sys.platform == "win32":
@@ -84,13 +84,24 @@ app.add_middleware(
 
 class BoundingBox(BaseModel):
     id: Optional[str] = None
-    className: str
+    # The React UI sends "label"; older clients send "className". Accept either, store both.
+    label: Optional[str] = None
+    className: Optional[str] = None
     confidence: Optional[float] = 1.0
     x: float
     y: float
     width: float
     height: float
     color: Optional[str] = None
+    isHumanCorrected: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def _fill_class_name(self):
+        name = self.label or self.className
+        if not name:
+            raise ValueError("box needs a 'label' or 'className'")
+        self.label = self.className = name
+        return self
 
 
 class LabelSubmission(BaseModel):

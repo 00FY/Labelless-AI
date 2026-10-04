@@ -24,11 +24,11 @@ COPY scripts/ ./scripts/
 COPY inputs/ ./inputs/
 COPY outputs/ ./outputs/
 COPY public/ ./public/
-COPY data/ ./data/
 COPY results/ ./results/
 
-# Synchronize pipeline data
-RUN python run_pipeline.py || true
+# data/ is gitignored and absent in a fresh clone; server.py creates it at startup.
+# public/ranked_dataset.json is used as committed: re-running run_pipeline.py here would
+# regenerate it from inputs/ and silently diverge from what the team demos locally.
 
 EXPOSE 8000
 

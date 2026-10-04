@@ -70,6 +70,40 @@ def test_label_persistence():
     assert data["saved"]["image_id"] == "test_ci_image_001"
 
 
+def test_label_persistence_with_ui_box_shape():
+    """The React UI sends boxes with "label" (not "className") plus isHumanCorrected."""
+    payload = {
+        "image_id": "test_ci_image_002",
+        "status": "human_reviewed",
+        "boxes": [
+            {
+                "id": "b-1",
+                "label": "Smoke",
+                "x": 1.0,
+                "y": 2.0,
+                "width": 30.0,
+                "height": 40.0,
+                "confidence": 0.31,
+                "isHumanCorrected": True,
+            }
+        ],
+        "user": "expert_reviewer",
+        "dominant_class": "Smoke",
+    }
+
+    res = client.post("/api/label", json=payload)
+    assert res.status_code == 200
+    box = res.json()["saved"]["boxes"][0]
+    assert box["label"] == "Smoke"
+    assert box["className"] == "Smoke"
+    assert box["isHumanCorrected"] is True
+
+
+def test_label_rejects_box_without_class():
+    payload = {"image_id": "test_ci_image_003", "status": "human_reviewed", "boxes": [{"x": 1, "y": 2, "width": 3, "height": 4}]}
+    assert client.post("/api/label", json=payload).status_code == 422
+
+
 def test_round_advance_endpoint():
     res = client.post("/api/round/next", json={"round_number": 4})
     assert res.status_code == 200
