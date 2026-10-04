@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ActiveLearningRound, NavigationTab } from '../types';
 import { getLabellessEffort, getMethodEffort, getLabellessMetrics } from '../data/realMetrics';
-import { Spline3DScene } from './Spline3DScene';
+import { InteractiveRetrainingMesh3D } from './InteractiveRetrainingMesh3D';
 import {
   TrendingUp,
   Zap,
@@ -130,17 +130,12 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
           </div>
 
           {/* Interactive 3D Model Checkpoint Node */}
-          <div className="my-4 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-            <Spline3DScene
-              preset="neuralMesh"
-              height="h-56 sm:h-64"
-              fallbackText="Interactive 3D Active Learning Retraining Mesh"
+          <div className="my-4 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+            <InteractiveRetrainingMesh3D
+              currentRound={selectedRoundNum}
+              height="h-64 sm:h-72"
             />
           </div>
-
-          <p className="text-xs sm:text-sm text-gray-600 font-medium">
-            &ldquo;By actively sampling only high-uncertainty and rare-class images, the team achieved near-perfect accuracy with less than half the human labor.&rdquo;
-          </p>
         </div>
       </section>
 
@@ -419,19 +414,7 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
         </div>
       </section>
 
-      {/* NEW COMING SOON CARDS */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-3 relative overflow-hidden">
-          <div className="absolute top-4 right-4 bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">Coming Soon</div>
-          <h3 className="text-sm font-bold text-gray-900">Round-over-Round Comparison</h3>
-          <p className="text-xs text-gray-500">Side-by-side visual comparison of R0 vs R4 model inferences on test set images.</p>
-        </div>
-        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-3 relative overflow-hidden">
-          <div className="absolute top-4 right-4 bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">Coming Soon</div>
-          <h3 className="text-sm font-bold text-gray-900">Strategy Switcher</h3>
-          <p className="text-xs text-gray-500">Toggle between LabelLess, Random, and Confidence strategies to see detailed metric diffs.</p>
-        </div>
-      </section>
+
 
       {/* "WHY LABELLESS?" COMPARISON MATRIX */}
       <section className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
@@ -445,61 +428,105 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs border-collapse">
             <thead className="border-b border-gray-200 bg-gray-50 text-[10px] font-extrabold uppercase tracking-widest text-gray-500">
               <tr>
-                <th className="px-4 py-3">Capability</th>
-                <th className="px-4 py-3 text-gray-500">Traditional Annotation Tools</th>
-                <th className="px-4 py-3 text-gray-900 font-bold">LabelLess AI</th>
+                <th className="px-4 py-3.5 w-1/3">Capability</th>
+                <th className="px-4 py-3.5 w-1/3 text-gray-500">Traditional Annotation Tools</th>
+                <th className="px-4 py-3.5 w-1/3 text-emerald-800 font-bold bg-emerald-50/50 border-l border-emerald-100">
+                  LabelLess AI (Active Pipeline)
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium bg-white">
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-gray-900">AI Assistance</td>
-                <td className="px-4 py-3 text-gray-500">Limited / Suggestion only</td>
-                <td className="px-4 py-3 text-emerald-700 font-bold flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> Full Autonomous Pseudo-Labeling
+              <tr className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3.5 font-semibold text-gray-900">AI Assistance</td>
+                <td className="px-4 py-3.5 text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-sm">~</span>
+                    <span>Limited / Suggestion only</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Full Autonomous Pseudo-Labeling</span>
+                  </div>
                 </td>
               </tr>
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-gray-900">Automatic Labels</td>
-                <td className="px-4 py-3 text-red-600 flex items-center gap-1.5">
-                  <X className="w-4 h-4" /> None (Manual review of 100% data)
+              <tr className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3.5 font-semibold text-gray-900">Automatic Labels</td>
+                <td className="px-4 py-3.5 text-red-600">
+                  <div className="flex items-center gap-2">
+                    <X className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>None (Manual review of 100% data)</span>
+                  </div>
                 </td>
-                <td className="px-4 py-3 text-emerald-700 font-bold flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> &gt;74% of high-confidence predictions
-                </td>
-              </tr>
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-gray-900">Intelligent Sampling</td>
-                <td className="px-4 py-3 text-red-600 flex items-center gap-1.5">
-                  <X className="w-4 h-4" /> Arbitrary order / Random
-                </td>
-                <td className="px-4 py-3 text-emerald-700 font-bold flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> Uncertainty + Diversity + Rare Class weights
+                <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>&gt;74% of high-confidence predictions</span>
+                  </div>
                 </td>
               </tr>
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-gray-900">Human Review Scope</td>
-                <td className="px-4 py-3 text-gray-500">Everything (10,000 images)</td>
-                <td className="px-4 py-3 text-emerald-700 font-bold flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> Only high-gradient, uncertain cases
+              <tr className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3.5 font-semibold text-gray-900">Intelligent Sampling</td>
+                <td className="px-4 py-3.5 text-red-600">
+                  <div className="flex items-center gap-2">
+                    <X className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>Arbitrary order / Random sampling</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Uncertainty + Diversity + Rare Class weights</span>
+                  </div>
                 </td>
               </tr>
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-gray-900">Continuous Learning</td>
-                <td className="px-4 py-3 text-gray-500">Manual re-export & train script</td>
-                <td className="px-4 py-3 text-emerald-700 font-bold flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> Integrated closed feedback retraining loop
+              <tr className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3.5 font-semibold text-gray-900">Human Review Scope</td>
+                <td className="px-4 py-3.5 text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <X className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>Everything (10,000 images, high fatigue)</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Only high-gradient, uncertain cases (26.5%)</span>
+                  </div>
                 </td>
               </tr>
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-gray-900">Effort & Time Measurement</td>
-                <td className="px-4 py-3 text-red-600 flex items-center gap-1.5">
-                  <X className="w-4 h-4" /> Unmeasured
+              <tr className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3.5 font-semibold text-gray-900">Continuous Learning</td>
+                <td className="px-4 py-3.5 text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-sm">~</span>
+                    <span>Manual re-export & train script offline</span>
+                  </div>
                 </td>
-                <td className="px-4 py-3 text-emerald-700 font-bold flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> Real-time 26.6h time-savings telemetry
+                <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Integrated closed feedback retraining loop</span>
+                  </div>
+                </td>
+              </tr>
+              <tr className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3.5 font-semibold text-gray-900">Effort & Time Measurement</td>
+                <td className="px-4 py-3.5 text-red-600">
+                  <div className="flex items-center gap-2">
+                    <X className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>Unmeasured / Blind progress</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Real-time 26.6h time-savings telemetry</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
