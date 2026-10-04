@@ -55,7 +55,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               AI Annotation in Progress
             </h1>
             <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-              ● Active Stream
+              ● Replay of Processed Pool
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500">

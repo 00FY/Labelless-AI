@@ -33,7 +33,7 @@ const SPOTLIGHT_FALLBACK_ITEMS: DatasetItem[] = [
     rareClassScore: 0.88,
     priorityScore: 0.92,
     priorityLevel: 'critical',
-    reasons: ['Model confidence is low (66%)', 'Structural damage underrepresented', 'High embedding distance'],
+    reasons: ['Model confidence is low (66%)', 'Rare-class boost applied', 'Multi-object scene'],
     explanation: {
       uncertaintyContribution: 0.51,
       diversityContribution: 0.06,
@@ -59,7 +59,7 @@ const SPOTLIGHT_FALLBACK_ITEMS: DatasetItem[] = [
     rareClassScore: 0.94,
     priorityScore: 0.88,
     priorityLevel: 'critical',
-    reasons: ['Fire is a rare class (< 5% dataset)', 'High thermal boundary entropy', 'Outlier vector candidate'],
+    reasons: ['Rare-class boost applied', 'Low model confidence', 'Multi-object scene'],
     explanation: {
       uncertaintyContribution: 0.57,
       diversityContribution: 0.08,
@@ -85,7 +85,7 @@ const SPOTLIGHT_FALLBACK_ITEMS: DatasetItem[] = [
     rareClassScore: 0.91,
     priorityScore: 0.85,
     priorityLevel: 'critical',
-    reasons: ['Smoke class underrepresented', 'High gradient uncertainty', 'Novel feature representation'],
+    reasons: ['Rare-class boost applied', 'Low model confidence', 'Multi-object scene'],
     explanation: {
       uncertaintyContribution: 0.61,
       diversityContribution: 0.09,
@@ -283,7 +283,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
                 <div className="text-[11px] font-bold text-white truncate">{item.predictedClass}</div>
                 <div className="text-[10px] font-mono text-slate-400 flex justify-between pt-0.5">
                   <span>Priority:</span>
-                  <span className="text-amber-400 font-bold">{(item.priorityScore || 0.72).toFixed(2)}</span>
+                  <span className="text-amber-400 font-bold">{(item.priorityScore ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             );
@@ -353,7 +353,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                     <div className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px]">
-                      {(item.priorityScore || 0.72).toFixed(2)} PRIORITY
+                      {(item.priorityScore ?? 0).toFixed(2)} PRIORITY
                     </div>
                   </div>
 
@@ -427,7 +427,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
               <div className="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-300">
                 <span>WHY THIS IMAGE?</span>
                 <span className="font-mono text-amber-400 font-extrabold text-sm">
-                  PRIORITY SCORE: {(selectedItem.priorityScore || 0.72).toFixed(2)}
+                  PRIORITY SCORE: {(selectedItem.priorityScore ?? 0).toFixed(2)}
                 </span>
               </div>
 
@@ -436,30 +436,30 @@ export const AITriageWorkbench: React.FC<Props> = ({
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
                     <span className="text-slate-400">UNCERTAINTY</span>
-                    <span className="text-amber-400 font-bold">{((selectedItem.uncertaintyScore || 0.74) * 100).toFixed(0)}%</span>
+                    <span className="text-amber-400 font-bold">{((selectedItem.uncertaintyScore ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(selectedItem.uncertaintyScore || 0.74) * 100}%` }} />
+                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(selectedItem.uncertaintyScore ?? 0) * 100}%` }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
                     <span className="text-slate-400">RARITY</span>
-                    <span className="text-purple-400 font-bold">{((selectedItem.rareClassScore || 0.88) * 100).toFixed(0)}%</span>
+                    <span className="text-purple-400 font-bold">{((selectedItem.rareClassScore ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${(selectedItem.rareClassScore || 0.88) * 100}%` }} />
+                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${(selectedItem.rareClassScore ?? 0) * 100}%` }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
                     <span className="text-slate-400">DIVERSITY</span>
-                    <span className="text-sky-400 font-bold">{((selectedItem.diversityScore || 0.62) * 100).toFixed(0)}%</span>
+                    <span className="text-sky-400 font-bold">{((selectedItem.diversityScore ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-sky-500 rounded-full" style={{ width: `${(selectedItem.diversityScore || 0.62) * 100}%` }} />
+                    <div className="h-full bg-sky-500 rounded-full" style={{ width: `${(selectedItem.diversityScore ?? 0) * 100}%` }} />
                   </div>
                 </div>
               </div>
@@ -477,11 +477,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
                   <>
                     <div className="flex items-center gap-1.5 text-[11px]">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>Model confidence is low (66%)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px]">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>Fire / Damaged class underrepresented</span>
+                      <span>No ranking reasons recorded for this image</span>
                     </div>
                   </>
                 )}

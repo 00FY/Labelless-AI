@@ -242,7 +242,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-3 hover:border-gray-300 transition-colors">
             <div className="text-[11px] font-mono font-bold text-gray-400">03 REVIEW</div>
             <h4 className="font-semibold text-gray-900">Value Ranking</h4>
-            <p className="text-sm text-gray-500">Combines uncertainty, embedding diversity, and rare class imbalance to pick top gradient samples.</p>
+            <p className="text-sm text-gray-500">Combines model uncertainty, class rarity, and scene diversity into one priority score.</p>
           </div>
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-3 hover:border-gray-300 transition-colors">
             <div className="text-[11px] font-mono font-bold text-gray-400">04 RETRAIN</div>

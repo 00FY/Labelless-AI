@@ -1,15 +1,16 @@
 {
   "_generated_by": "scripts/export_experiment_results.py",
-  "_generated_at": "2026-10-04T12:10:32.115468+00:00",
+  "_generated_at": "2026-10-04T14:48:29.157871+00:00",
   "_do_not_edit": "This file is auto-generated. Edit config.yaml or run experiments to update it.",
   "experiment_id": "labelless_ai_20261004",
   "setup": {
     "dataset": "Multi-Disaster Active Learning Dataset",
     "model": "yolov8n.pt",
-    "total_images": 1387,
+    "total_images": 1421,
     "seed_count": 139,
     "pool_count": 971,
-    "test_count": 277,
+    "test_count": 311,
+    "seed_count_is_estimate": true,
     "split_ratios": {
       "seed": 0.1,
       "pool": 0.7,
@@ -18,10 +19,11 @@
     "random_seed": 42,
     "training": {
       "epochs_seed": 50,
-      "epochs_round": 20,
-      "batch_size": 16,
-      "image_size": 640,
-      "patience": 10
+      "epochs_round": 15,
+      "batch_size": 8,
+      "image_size": 416,
+      "patience": 5,
+      "device": "cpu"
     },
     "classes": [
       "undamagedbuilding",
@@ -225,6 +227,8 @@
     "Round 0 cold-start baseline is shared across all strategies \u2014 active-learning divergence appears from Round 1 onward.",
     "All strategy comparison and ablation experiments were evaluated under identical CPU hardware, batch size (8), image size (416), and budget (100) constraints.",
     "Metrics were computed against a fixed, held-out test split of 311 images.",
+    "Seed-set size is estimated from the configured split ratios.",
+    "Single run with one random seed; differences of about one mAP point are within run-to-run noise.",
     "Model: YOLOv8n (Nano) \u2014 a lightweight real-time object detector chosen for fast active-learning iteration."
   ]
 }

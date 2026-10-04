@@ -238,6 +238,7 @@ export const App: React.FC = () => {
         isOpen={!!explainItem}
         onClose={() => setExplainItem(null)}
         item={explainItem}
+        onOpenWorkspace={handleSelectImageForWorkspace}
       />
     </div>
   );

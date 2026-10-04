@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DatasetItem } from '../types';
 import { X, Sparkles, AlertTriangle, Layers, Flame, CheckCircle, Info } from 'lucide-react';
@@ -15,7 +15,15 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
   onClose,
   onOpenWorkspace,
 }) => {
-  if (!item) return null;
+  // Close on Escape while open
+  useEffect(() => {
+    if (!item) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [item, onClose]);
 
   const pipeCfg = getPipelineConfig();
   const formulaStr = getFormulaString(pipeCfg);
@@ -35,14 +43,23 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
     }
   };
 
-  const colors = getPriorityColor(item.priorityLevel);
+  const colors = getPriorityColor(item?.priorityLevel ?? 'low');
 
+  // Render inside AnimatePresence so the exit animation runs when item becomes null
   return (
     <AnimatePresence>
-      <div
+      {item && (
+      <motion.div
+        key="explain-modal"
         id="explain-modal-backdrop"
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="explain-modal-title"
       >
         <motion.div
           id="explain-modal-container"
@@ -60,7 +77,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h3 id="explain-modal-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   Explain Decision: <span className="text-gray-500 font-mono text-sm">{item.id}</span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">Active Learning Routing Diagnostic & Priority Score Calculation</p>
@@ -69,6 +86,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
             <button
               id="close-explain-modal-btn"
               onClick={onClose}
+              aria-label="Close"
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
@@ -162,7 +180,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-2 text-gray-900 font-bold">
                     <Layers className="w-4 h-4 text-blue-500" />
-                    Visual / Embedding Diversity (weight: {w_diversity})
+                    Scene Diversity (weight: {w_diversity})
                   </span>
                   <span className="font-mono text-gray-600 font-medium">
                     +{(item.explanation.diversityContribution).toFixed(2)} (Score: {(item.diversityScore * 100).toFixed(0)}%)
@@ -175,7 +193,7 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                   />
                 </div>
                 <p className="text-[11px] text-gray-500">
-                  Latent embedding distance from previously verified images is {(item.diversityScore * 100).toFixed(0)}%. High novelty expands feature boundaries.
+                  Based on how many objects were detected ({item.boxes.length} here): busier, multi-object scenes score higher than single-object ones.
                 </p>
               </div>
 
@@ -197,7 +215,9 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
                   />
                 </div>
                 <p className="text-[11px] text-gray-500">
-                  Target class &ldquo;{item.predictedClass}&rdquo; is currently underrepresented in the validated ground-truth pool.
+                  {item.rareClassScore > 0
+                    ? 'Rarest class detected here, scored by how much less often the model predicts it than the most common class.'
+                    : 'Only the most frequently predicted class was detected, so there is no rarity boost.'}
                 </p>
               </div>
             </div>
@@ -241,7 +261,8 @@ export const ExplainDecisionModal: React.FC<ExplainDecisionModalProps> = ({
             )}
           </div>
         </motion.div>
-      </div>
+      </motion.div>
+      )}
     </AnimatePresence>
   );
 };

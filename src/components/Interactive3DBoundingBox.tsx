@@ -109,9 +109,9 @@ export const AIVisionInspector: React.FC<Props> = ({
         predictedClass: propItem.predictedClass,
         confidence: propItem.confidence,
         uncertainty: propItem.uncertaintyScore || (1 - propItem.confidence),
-        rarity: propItem.rareClassScore || 0.5,
-        diversity: propItem.diversityScore || 0.5,
-        priorityScore: propItem.priorityScore || 0.72,
+        rarity: propItem.rareClassScore ?? 0,
+        diversity: propItem.diversityScore ?? 0,
+        priorityScore: propItem.priorityScore ?? 0,
         boxes: propItem.boxes && propItem.boxes.length > 0 ? propItem.boxes : [
           { id: 'pb1', label: propItem.predictedClass, x: 20, y: 20, width: 55, height: 55, confidence: propItem.confidence }
         ],

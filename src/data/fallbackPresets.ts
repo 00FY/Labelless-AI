@@ -103,7 +103,7 @@ export const INITIAL_PROJECT_CONFIG: ProjectConfig = {
 
 // Measured rounds, in percent. Round 0 = results/metrics/round_0_seed.json,
 // Round 1 = results/metrics/round_1_labelless.json (+100 human labels).
-// trainingImages: 139 seed images, plus 100 labelled in Round 1.
+// trainingImages: ~139 seed images (estimated from split ratios), plus 100 labelled in Round 1.
 export const ACTIVE_LEARNING_ROUNDS: ActiveLearningRound[] = [
   {
     round: 0,
