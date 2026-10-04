@@ -1,0 +1,160 @@
+{
+  "experiment_configuration": {
+    "dataset": "Multi-Disaster Active Learning Dataset",
+    "model": "YOLOv8n",
+    "round": 1,
+    "budget": 100,
+    "random_seed": 42,
+    "test_set": {
+      "size": 311,
+      "path": "data/test",
+      "fixed": true,
+      "note": "Fixed test set held out before any training; identical across all four methods"
+    },
+    "starting_checkpoint": "models/finetuned/weights/best.pt",
+    "training_configuration": {
+      "epochs": 20,
+      "batch_size": 16,
+      "image_size": 640,
+      "patience": 10,
+      "optimizer": "AdamW (auto-selected)",
+      "device": "MPS (Apple M1)",
+      "base_model_type": "YOLOv8n"
+    }
+  },
+
+  "methods": {
+    "random": {
+      "label": "Random",
+      "description": "Uniform random sample from pool (seed=42)",
+      "ranking_formula": null
+    },
+    "uncertainty": {
+      "label": "Uncertainty",
+      "description": "Top-N images by canonical uncertainty score U",
+      "ranking_formula": "P = U",
+      "weights": { "w_unc": 1.0, "w_rare": 0.0, "w_div": 0.0 }
+    },
+    "uncertainty_rarity": {
+      "label": "Uncertainty + Rarity",
+      "description": "Top-N images by uncertainty and rarity; diversity excluded",
+      "ranking_formula": "P = 0.778*U + 0.222*R  (normalized from 0.70 / 0.20)",
+      "weights": { "w_unc": 0.778, "w_rare": 0.222, "w_div": 0.0 }
+    },
+    "labelless": {
+      "label": "Full LabelLess",
+      "description": "Top-N images by full tri-factor canonical formula",
+      "ranking_formula": "P = 0.70*U + 0.20*R + 0.10*D",
+      "weights": { "w_unc": 0.70, "w_rare": 0.20, "w_div": 0.10 }
+    }
+  },
+
+  "ranking_formulas": {
+    "canonical_uncertainty": {
+      "formula": "U = 0.60 * (1 - avg_conf) + 0.40 * (1 - min_conf)",
+      "note": "U = 1.0 for images with zero detections"
+    },
+    "A_uncertainty_only": "P = U",
+    "B_uncertainty_plus_rarity": "P = 0.70*U + 0.20*R  (normalized: 0.778*U + 0.222*R)",
+    "C_full_labelless": "P = 0.70*U + 0.20*R + 0.10*D"
+  },
+
+  "results": {
+    "random": {
+      "selected_count": 100,
+      "mAP50": 0.679,
+      "mAP50_95": 0.4127,
+      "precision": 0.6514,
+      "recall": 0.6506,
+      "f1": 0.651,
+      "per_class": {
+        "undamagedbuilding": { "ap50": 0.7283, "precision": 0.7114, "recall": 0.6257 },
+        "damagedbuilding":   { "ap50": 0.6064, "precision": 0.5409, "recall": 0.6809 },
+        "fire":              { "ap50": 0.6026, "precision": 0.5546, "recall": 0.5435 },
+        "smoke":             { "ap50": 0.7786, "precision": 0.7988, "recall": 0.7521 }
+      }
+    },
+    "uncertainty": {
+      "selected_count": 100,
+      "mAP50": 0.6581,
+      "mAP50_95": 0.4077,
+      "precision": 0.6541,
+      "recall": 0.6537,
+      "f1": 0.6539,
+      "per_class": {
+        "undamagedbuilding": { "ap50": 0.6756, "precision": 0.6406, "recall": 0.5843 },
+        "damagedbuilding":   { "ap50": 0.5411, "precision": 0.5106, "recall": 0.5944 },
+        "fire":              { "ap50": 0.6808, "precision": 0.6377, "recall": 0.7609 },
+        "smoke":             { "ap50": 0.7350, "precision": 0.8276, "recall": 0.6752 }
+      }
+    },
+    "uncertainty_rarity": {
+      "selected_count": 100,
+      "mAP50": 0.6581,
+      "mAP50_95": 0.4077,
+      "precision": 0.6541,
+      "recall": 0.6537,
+      "f1": 0.6539,
+      "per_class": {
+        "undamagedbuilding": { "ap50": 0.6756, "precision": 0.6406, "recall": 0.5843 },
+        "damagedbuilding":   { "ap50": 0.5411, "precision": 0.5106, "recall": 0.5944 },
+        "fire":              { "ap50": 0.6808, "precision": 0.6377, "recall": 0.7609 },
+        "smoke":             { "ap50": 0.7350, "precision": 0.8276, "recall": 0.6752 }
+      }
+    },
+    "labelless": {
+      "selected_count": 100,
+      "mAP50": 0.6146,
+      "mAP50_95": 0.3549,
+      "precision": 0.5944,
+      "recall": 0.6514,
+      "f1": 0.6216,
+      "per_class": {
+        "undamagedbuilding": { "ap50": 0.6628, "precision": 0.6733, "recall": 0.5340 },
+        "damagedbuilding":   { "ap50": 0.5409, "precision": 0.4723, "recall": 0.6970 },
+        "fire":              { "ap50": 0.5312, "precision": 0.5334, "recall": 0.6739 },
+        "smoke":             { "ap50": 0.7233, "precision": 0.6989, "recall": 0.7009 }
+      }
+    }
+  },
+
+  "selection_information": {
+    "pool_size": 971,
+    "budget": 100,
+    "selected_count_all_methods": 100,
+    "selection_overlap": {
+      "uncertainty_vs_uncertainty_rarity": "IDENTICAL — same 100 images selected",
+      "uncertainty_vs_labelless_original_run": "IDENTICAL — same 100 images selected (see integrity caveat)",
+      "uncertainty_vs_labelless_corrected_selector": "IDENTICAL — same 100 images selected (see integrity caveat)",
+      "random_vs_all_scored_methods": "0 overlap (random is independent)"
+    }
+  },
+
+  "key_findings": {
+    "f1": "Random achieved the highest Round-1 mAP@50 (0.6790), outperforming Uncertainty (0.6581) and LabelLess (0.6146) by 2.1 pp and 6.4 pp respectively.",
+    "f2": "Uncertainty achieved the highest Fire AP50 (0.6808) among all methods.",
+    "f3": "Random achieved the highest Smoke AP50 (0.7786) among all methods.",
+    "f4": "Uncertainty and Uncertainty+Rarity selected the same 100-image set in this pool. Their metrics are therefore identical (mAP50=0.6581). The rarity component did not shift the top-100 cut because the pool's score distribution places all high-uncertainty images in a near-uniform plateau.",
+    "f5": "LabelLess selected the same 100-image set as Uncertainty in both the original run (due to a stale ranked_queue.json) and after the code fix (due to data degeneracy). The top 122 pool images all have uncertainty_score=1.0, rare_class_score=0.0, and diversity_score=0.5, so adding R and D to the formula does not change which 100 images are chosen at budget=100.",
+    "f6": "This Round-1 experiment does NOT demonstrate a selection difference between Uncertainty and the full LabelLess scoring formula at budget=100 for this pool and checkpoint combination.",
+    "f7": "No claim is made about LabelLess performance in general. The observed LabelLess mAP50 difference (−0.044 vs Uncertainty) reflects differences in training data composition (human labels vs synthetic labels from ground truth), not a selection-set difference."
+  },
+
+  "integrity_caveat": {
+    "issue_identified": "The original select_labelless() function read a static inputs/ranked_queue.json of unknown provenance instead of freshly scoring outputs/predictions.json with the canonical tri-factor formula.",
+    "fix_applied": "select_labelless() in scripts/run_experiment.py was rewritten to call rank_predictions() directly from outputs/predictions.json with weights w_unc=0.70, w_rare=0.20, w_div=0.10 from config.yaml. The call site was updated from ranked_queue_path to predictions_path.",
+    "rerun_decision": "The corrected LabelLess selector independently produces the same top-100 image set as the original run. This was verified by a read-only selection test showing 100/100 overlap between corrected labelless and uncertainty selections. Because the selection is identical regardless of the fix, rerunning training would produce a result that cannot be attributed to a distinct selection strategy. Training was not rerun.",
+    "data_degeneracy_explanation": "122 images in the pool have uncertainty_score=1.0 (zero detections by the base checkpoint). All 122 also have rare_class_score=0.0 and diversity_score=0.5 (zero-detection bucket). The 100-image budget fits entirely within this plateau. Adding R and D to the composite score changes the absolute priority values but not the rank order of these 122 images relative to each other, so the top-100 cut is identical under any weighting of U, R, and D.",
+    "original_result_preserved": "results/metrics/round_1_labelless.json was not modified. It remains a valid trained result reflecting the original (stale-queue) run, but its selection set is not distinct from Uncertainty."
+  },
+
+  "source_files": [
+    "results/metrics/round_1_random.json",
+    "results/metrics/round_1_uncertainty.json",
+    "results/metrics/round_1_uncertainty_rarity.json",
+    "results/metrics/round_1_labelless.json"
+  ],
+
+  "generated_at": "2026-10-04",
+  "generated_by": "Person A ablation pipeline — documentation only, no training performed"
+}

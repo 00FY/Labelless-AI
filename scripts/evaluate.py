@@ -162,9 +162,28 @@ def evaluate_model(model_path: str, data_yaml: str, device=None) -> dict:
 # Saving & printing
 # ---------------------------------------------------------------------------
 def build_results_dict(eval_metrics: dict, round_num: int,
-                       method: str, budget: int, total_pool: int) -> dict:
-    """Assemble the full results dictionary ready for JSON serialisation."""
-    return {
+                       method: str, budget: int, total_pool: int,
+                       label: str | None = None) -> dict:
+    """Assemble the full results dictionary ready for JSON serialisation.
+
+    Parameters
+    ----------
+    eval_metrics : dict
+        Output of evaluate_model().
+    round_num : int
+        Active-learning round number.
+    method : str
+        Selection method name (e.g. 'labelless', 'random').
+    budget : int
+        Number of images reviewed this round.
+    total_pool : int
+        Total pool size.
+    label : str or None
+        Optional ablation label appended to the result filename
+        (e.g. 'budget50', 'no_diversity').  When provided it is stored in the
+        results dict so aggregate_metrics.py can display it.
+    """
+    result = {
         "method":            method,
         "round":             round_num,
         "budget":            budget,
@@ -177,10 +196,14 @@ def build_results_dict(eval_metrics: dict, round_num: int,
         "f1":                eval_metrics["f1"],
         "per_class":         eval_metrics["per_class"],
     }
+    if label:
+        result["label"] = label
+    return result
 
 
-def save_metrics(results: dict, output_dir: Path) -> Path:
-    """Write the results dict to ``round_N_method.json``.
+def save_metrics(results: dict, output_dir: Path,
+                 label: str | None = None) -> Path:
+    """Write the results dict to ``round_N_method[_label].json``.
 
     Parameters
     ----------
@@ -188,6 +211,10 @@ def save_metrics(results: dict, output_dir: Path) -> Path:
         Full results dictionary.
     output_dir : Path
         Directory for metric files (created if absent).
+    label : str or None
+        Optional suffix appended to the filename before the extension, so
+        ablation variants at the same round/method do not overwrite each other.
+        E.g. label='budget50' → ``round_1_labelless_budget50.json``.
 
     Returns
     -------
@@ -195,7 +222,10 @@ def save_metrics(results: dict, output_dir: Path) -> Path:
         The written JSON file path.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"round_{results['round']}_{results['method']}.json"
+    base = f"round_{results['round']}_{results['method']}"
+    if label:
+        base = f"{base}_{label}"
+    filename = f"{base}.json"
     out_path = output_dir / filename
 
     with open(out_path, "w", encoding="utf-8") as f:

@@ -4,26 +4,29 @@ run_experiment.py
 End-to-end experiment runner for LabelLess AI.
 Orchestrates: select images → build dataset → train YOLO → evaluate → save metrics.
 
-Supports three selection methods:
-  --method random      : Randomly pick N images from pool
-  --method confidence  : Pick the N lowest-confidence images from predictions.json
-  --method labelless   : Use Person B's ranked_queue.json (top N)
+Supports selection methods:
+  --method random              : Randomly pick N images from pool
+  --method uncertainty         : Pick the N highest-uncertainty images (U = 0.60*(1-avg) + 0.40*(1-min))
+  --method confidence          : (Alias for uncertainty)
+  --method uncertainty_rarity  : Score by uncertainty + rarity only (w_unc=0.70, w_rare=0.20, w_div=0.0)
+  --method labelless           : Full tri-factor score (uncertainty + rarity + diversity)
+                                 Uses Person B's ranked_queue.json (top N)
 
-For 'random' and 'confidence' methods, the script generates synthetic
-human_labels.json by looking up ground-truth labels from
+For 'random', 'uncertainty', and 'uncertainty_rarity' methods, the script
+generates synthetic human_labels.json by looking up ground-truth labels from
 data/pool_ground_truth_hidden/ (simulating perfect human review).
 
-Usage:
-    python scripts/run_experiment.py \
-        --method labelless \
-        --round 1 \
-        --budget 100
+Use --label <name> to give an experiment a unique suffix in its result filename,
+preventing ablation variants from overwriting each other:
+    round_1_labelless.json            (no label)
+    round_1_labelless_budget50.json   (--label budget50)
 
-    python scripts/run_experiment.py \
-        --method random \
-        --round 1 \
-        --budget 50 \
-        --epochs 10
+Usage:
+    python scripts/run_experiment.py --method uncertainty --round 1 --budget 100
+    python scripts/run_experiment.py --method uncertainty_rarity --round 1 --budget 100
+    python scripts/run_experiment.py --method labelless --round 1 --budget 100
+    python scripts/run_experiment.py --method random --round 1 --budget 50 --epochs 10
+    python scripts/run_experiment.py --method labelless --round 1 --budget 50 --label budget50
 """
 
 from __future__ import annotations
@@ -75,34 +78,86 @@ def select_random(pool_images: list[str], budget: int, seed: int = 42) -> list[s
     return selected
 
 
-def select_by_confidence(predictions_path: Path, budget: int) -> list[str]:
-    """Select the N lowest-confidence images from predictions.json."""
+def select_uncertainty(predictions_path: Path, budget: int) -> list[str]:
+    """Select the top-N images ranked by canonical uncertainty score.
+
+    Uses rank.py's rank_predictions() with w_unc=1.0, w_rare=0.0, w_div=0.0.
+    The underlying uncertainty formula matches the full pipeline:
+        U = 0.60 * (1.0 - avg_conf) + 0.40 * (1.0 - min_conf)
+    (or U = 1.0 for images with 0 detections).
+    """
+    from rank import rank_predictions
+
     with open(predictions_path, "r", encoding="utf-8") as f:
         predictions = json.load(f)
 
-    # Compute average confidence per image
-    image_confs = []
-    for entry in predictions:
-        preds = entry.get("predictions", [])
-        if preds:
-            avg_conf = sum(p["confidence"] for p in preds) / len(preds)
-        else:
-            avg_conf = 0.0  # No detections = most uncertain
-        image_confs.append((entry["image"], avg_conf))
-
-    # Sort by confidence ascending (lowest first)
-    image_confs.sort(key=lambda x: x[1])
-    return [img for img, _ in image_confs[:budget]]
+    ranked = rank_predictions(predictions, w_unc=1.0, w_rare=0.0, w_div=0.0)
+    return [item["image_id"] for item in ranked[:budget]]
 
 
-def select_labelless(ranked_queue_path: Path, budget: int) -> list[str]:
-    """Select the top-N images from Person B's ranked_queue.json."""
-    with open(ranked_queue_path, "r", encoding="utf-8") as f:
-        queue = json.load(f)
+def select_by_confidence(predictions_path: Path, budget: int) -> list[str]:
+    """Backwards-compatible alias for select_uncertainty.
 
-    ranked = queue.get("ranked_images", queue if isinstance(queue, list) else [])
-    # Already sorted by priority descending
-    return [entry["image_id"] for entry in ranked[:budget]]
+    Delegates directly to select_uncertainty() using canonical uncertainty scoring.
+    """
+    return select_uncertainty(predictions_path, budget)
+
+
+def select_labelless(predictions_path: Path, budget: int) -> list[str]:
+    """Select the top-N images using the full canonical LabelLess tri-factor formula.
+
+    Freshly scores outputs/predictions.json with:
+        P = w_uncertainty * U + w_rare_class * R + w_diversity * D
+    using the weights from config.yaml (frozen at 0.70 / 0.20 / 0.10).
+    Does NOT rely on a pre-existing inputs/ranked_queue.json.
+    """
+    from rank import rank_predictions
+    from load_config import cfg
+
+    with open(predictions_path, "r", encoding="utf-8") as f:
+        predictions = json.load(f)
+
+    ranking = cfg["ranking"]
+    w_unc  = ranking["w_uncertainty"]   # 0.70
+    w_rare = ranking["w_rare_class"]    # 0.20
+    w_div  = ranking["w_diversity"]     # 0.10
+
+    ranked = rank_predictions(predictions, w_unc=w_unc, w_rare=w_rare, w_div=w_div)
+    return [item["image_id"] for item in ranked[:budget]]
+
+
+def select_uncertainty_rarity(predictions_path: Path, budget: int) -> list[str]:
+    """Select the top-N images ranked by uncertainty + rarity only (no diversity).
+
+    Uses rank.py's existing scoring functions directly with w_div=0.0 so that
+    diversity contributes nothing to the composite score.  The uncertainty and
+    rarity weights are taken from config.yaml (w_uncertainty and w_rare_class)
+    and re-normalised to sum to 1.0, preserving their ratio.
+
+    This avoids duplicating any scoring logic: all calculation is delegated to
+    rank.py's rank_predictions() with an explicit diversity-weight override.
+    """
+    from rank import rank_predictions
+    from load_config import cfg
+
+    with open(predictions_path, "r", encoding="utf-8") as f:
+        predictions = json.load(f)
+
+    ranking = cfg["ranking"]
+    w_unc_raw = ranking["w_uncertainty"]
+    w_rare_raw = ranking["w_rare_class"]
+
+    # Re-normalise the two active weights so they sum to 1.0
+    total = w_unc_raw + w_rare_raw
+    if total <= 0:
+        # Degenerate config — fall back to equal split
+        w_unc, w_rare = 0.5, 0.5
+    else:
+        w_unc = w_unc_raw / total
+        w_rare = w_rare_raw / total
+
+    ranked = rank_predictions(predictions, w_unc=w_unc, w_rare=w_rare, w_div=0.0)
+    return [item["image_id"] for item in ranked[:budget]]
 
 
 # ---------------------------------------------------------------------------
@@ -184,6 +239,7 @@ def run_experiment(args):
     round_num = args.round
     budget = args.budget
     method = args.method
+    label = getattr(args, "label", None) or None  # None when empty string
 
     print("\n" + "=" * 60)
     print("  LabelLess AI - Experiment Runner")
@@ -191,6 +247,8 @@ def run_experiment(args):
     print(f"  Method       : {method}")
     print(f"  Round        : {round_num}")
     print(f"  Budget       : {budget}")
+    if label:
+        print(f"  Label        : {label}")
     print(f"  Epochs       : {args.epochs}")
     print(f"  Data dir     : {data_dir}")
     print("=" * 60)
@@ -210,11 +268,15 @@ def run_experiment(args):
             pool_images = [e["image"] for e in preds]
         selected = select_random(pool_images, budget, seed=42 + round_num)
 
-    elif method == "confidence":
-        selected = select_by_confidence(predictions_path, budget)
+    elif method in ("uncertainty", "confidence"):
+        selected = select_uncertainty(predictions_path, budget)
+        method = "uncertainty"  # Normalize method name for results output
+
+    elif method == "uncertainty_rarity":
+        selected = select_uncertainty_rarity(predictions_path, budget)
 
     elif method == "labelless":
-        selected = select_labelless(ranked_queue_path, budget)
+        selected = select_labelless(predictions_path, budget)
 
     else:
         print(f"ERROR: Unknown method '{method}'", file=sys.stderr)
@@ -229,12 +291,13 @@ def run_experiment(args):
     human_labels_path = round_output / "human_labels.json"
     round_output.mkdir(parents=True, exist_ok=True)
 
+    # labelless uses real human labels (from Person C's UI review).
+    # All other methods simulate perfect labelling from hidden ground truth.
     if method == "labelless" and Path(args.human_labels).exists():
-        # Use the actual human labels file
         shutil.copy2(args.human_labels, human_labels_path)
         print("[OK] (from real human labels)")
     else:
-        # Generate synthetic labels from ground truth
+        # random, uncertainty (or confidence alias), uncertainty_rarity → synthetic labels from ground truth
         synthetic = generate_synthetic_human_labels(selected, gt_dir, pool_dir)
         with open(human_labels_path, "w", encoding="utf-8") as f:
             json.dump(synthetic, f, indent=2)
@@ -320,10 +383,11 @@ def run_experiment(args):
         method=method,
         budget=budget,
         total_pool=total_pool,
+        label=label,
     )
 
     metrics_dir = PROJECT_ROOT / "results" / "metrics"
-    saved_path = save_metrics(results, metrics_dir)
+    saved_path = save_metrics(results, metrics_dir, label=label)
     print("[OK]")
 
     # ---- Summary ----
@@ -346,14 +410,20 @@ def parse_args():
         epilog=(
             "Examples:\n"
             "  python scripts/run_experiment.py --method random --round 1 --budget 100\n"
-            "  python scripts/run_experiment.py --method confidence --round 1 --budget 100\n"
+            "  python scripts/run_experiment.py --method uncertainty --round 1 --budget 100\n"
+            "  python scripts/run_experiment.py --method uncertainty_rarity --round 1 --budget 100\n"
             "  python scripts/run_experiment.py --method labelless --round 1 --budget 100\n"
+            "\n"
+            "  # Ablation: same method, different budgets — filenames won't collide\n"
+            "  python scripts/run_experiment.py --method labelless --round 1 --budget 50 --label budget50\n"
+            "  python scripts/run_experiment.py --method labelless --round 1 --budget 100 --label budget100\n"
         ),
     )
 
     parser.add_argument(
-        "--method", required=True, choices=["random", "confidence", "labelless"],
-        help="Image selection strategy.",
+        "--method", required=True,
+        choices=["random", "uncertainty", "confidence", "uncertainty_rarity", "labelless"],
+        help="Image selection strategy ('uncertainty', 'uncertainty_rarity', 'labelless', 'random'; 'confidence' is an alias for 'uncertainty').",
     )
     parser.add_argument(
         "--round", type=int, required=True,
@@ -362,6 +432,14 @@ def parse_args():
     parser.add_argument(
         "--budget", type=int, required=True,
         help="Number of images to select for human review.",
+    )
+    parser.add_argument(
+        "--label", default=None,
+        help=(
+            "Optional suffix added to the result filename to prevent ablation "
+            "variants from overwriting each other.  "
+            "E.g. --label budget50 produces round_1_labelless_budget50.json."
+        ),
     )
     parser.add_argument(
         "--epochs", type=int, default=20,

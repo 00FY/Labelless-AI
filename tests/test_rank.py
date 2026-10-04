@@ -78,11 +78,11 @@ def test_score_item_uncertainty_priority():
 def test_rank_predictions_sorting(sample_predictions):
     ranked_queue = rank_predictions(sample_predictions, w_unc=0.7, w_rare=0.2, w_div=0.1)
     assert len(ranked_queue) == 4
-    
+
     # Verify descending order of priority scores
     scores = [item["priority_score"] for item in ranked_queue]
     assert scores == sorted(scores, reverse=True), "Queue must be sorted in descending priority order"
-    
+
     # Verify each item has required schema fields
     for item in ranked_queue:
         assert "image_id" in item
@@ -91,3 +91,27 @@ def test_rank_predictions_sorting(sample_predictions):
         assert "rare_class_score" in item
         assert "diversity_score" in item
         assert 0.0 <= item["priority_score"] <= 1.0
+
+
+def test_ablation_scoring_variants(sample_predictions):
+    """Verify that all three Person A ablation scoring variants work cleanly."""
+    # Variant A: Pure Uncertainty
+    var_a = rank_predictions(sample_predictions, w_unc=1.0, w_rare=0.0, w_div=0.0)
+    for item in var_a:
+        assert item["priority_score"] == item["uncertainty_score"]
+
+    # Variant B: Uncertainty + Rarity (w_div=0.0)
+    var_b = rank_predictions(sample_predictions, w_unc=0.70, w_rare=0.20, w_div=0.0)
+    for item in var_b:
+        expected = round(0.70 * item["uncertainty_score"] + 0.20 * item["rare_class_score"], 4)
+        assert abs(item["priority_score"] - expected) < 1e-3
+
+    # Variant C: Full LabelLess (w_unc=0.70, w_rare=0.20, w_div=0.10)
+    var_c = rank_predictions(sample_predictions, w_unc=0.70, w_rare=0.20, w_div=0.10)
+    for item in var_c:
+        expected = round(
+            0.70 * item["uncertainty_score"] + 0.20 * item["rare_class_score"] + 0.10 * item["diversity_score"],
+            4
+        )
+        assert abs(item["priority_score"] - expected) < 1e-3
+
