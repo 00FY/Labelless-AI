@@ -2,6 +2,7 @@
 tests/test_server.py - Validates FastAPI server endpoints and persistence
 """
 
+import json
 import sys
 from pathlib import Path
 import pytest
@@ -70,6 +71,40 @@ def test_label_persistence():
     assert data["saved"]["image_id"] == "test_ci_image_001"
 
 
+def test_label_persistence_with_ui_box_shape():
+    """The React UI sends boxes with "label" (not "className") plus isHumanCorrected."""
+    payload = {
+        "image_id": "test_ci_image_002",
+        "status": "human_reviewed",
+        "boxes": [
+            {
+                "id": "b-1",
+                "label": "Smoke",
+                "x": 1.0,
+                "y": 2.0,
+                "width": 30.0,
+                "height": 40.0,
+                "confidence": 0.31,
+                "isHumanCorrected": True,
+            }
+        ],
+        "user": "expert_reviewer",
+        "dominant_class": "Smoke",
+    }
+
+    res = client.post("/api/label", json=payload)
+    assert res.status_code == 200
+    box = res.json()["saved"]["boxes"][0]
+    assert box["label"] == "Smoke"
+    assert box["className"] == "Smoke"
+    assert box["isHumanCorrected"] is True
+
+
+def test_label_rejects_box_without_class():
+    payload = {"image_id": "test_ci_image_003", "status": "human_reviewed", "boxes": [{"x": 1, "y": 2, "width": 3, "height": 4}]}
+    assert client.post("/api/label", json=payload).status_code == 422
+
+
 def test_round_advance_endpoint():
     res = client.post("/api/round/next", json={"round_number": 4})
     assert res.status_code == 200
@@ -79,3 +114,13 @@ def test_round_advance_endpoint():
     summary = data["round_summary"]
     assert "mAP50" in summary["metrics"]
     assert "time_saved_hours" in summary
+
+
+def test_label_save_does_not_rewrite_public_dataset():
+    """Rewriting public/ranked_dataset.json makes the Vite dev server reload the page after every save."""
+    dataset = Path(__file__).resolve().parent.parent / "public" / "ranked_dataset.json"
+    before = dataset.read_bytes()
+    first_id = json.loads(before)[0]["id"]
+    payload = {"image_id": first_id, "status": "human_reviewed", "boxes": []}
+    assert client.post("/api/label", json=payload).status_code == 200
+    assert dataset.read_bytes() == before

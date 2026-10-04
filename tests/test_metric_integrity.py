@@ -5,8 +5,9 @@ General Metric Guardrail:
 Ensures that EVERY performance metric (mAP, precision, recall, F1, per-class AP)
 published in:
   - README.md
-  - src/data/realMetrics.ts
+  - src/data/measuredResults.ts
   - src/data/fallbackPresets.ts
+  - src/components/*.tsx
   - DEMO_SCRIPT.md
 is strictly grounded in and traceable to measured JSON files in results/metrics/*.json.
 
@@ -21,7 +22,8 @@ import pytest
 _ROOT = Path(__file__).resolve().parent.parent
 METRICS_DIR = _ROOT / "results" / "metrics"
 README_PATH = _ROOT / "README.md"
-REAL_METRICS_PATH = _ROOT / "src" / "data" / "realMetrics.ts"
+MEASURED_RESULTS_PATH = _ROOT / "src" / "data" / "measuredResults.ts"
+COMPONENTS_DIR = _ROOT / "src" / "components"
 FALLBACK_PRESETS_PATH = _ROOT / "src" / "data" / "fallbackPresets.ts"
 DEMO_SCRIPT_PATH = _ROOT / "DEMO_SCRIPT.md"
 
@@ -88,41 +90,49 @@ def test_readme_metrics_grounded():
         )
 
 
-def test_real_metrics_ts_grounded():
-    """Every completed round metric in realMetrics.ts must match results/metrics/*.json."""
-    measured = get_all_measured_metrics()
-    code_text = REAL_METRICS_PATH.read_text(encoding="utf-8")
+def _is_measured_fraction(val: float, measured: dict, tol: float = 0.0006) -> bool:
+    return any(abs(val - float(f)) <= tol for f in measured["raw_floats"])
 
-    # Extract mAP50 float values
-    map_values = re.findall(r"mAP50:\s*(\d+\.\d+)", code_text)
-    for m in map_values:
-        # Round 0 must match
-        val = float(m)
-        formatted = f"{val:.4f}"
-        assert formatted in measured["raw_floats"] or val == 0.0, (
-            f"Unverified mAP50 '{m}' found in realMetrics.ts! Must match results/metrics/*.json"
+
+def test_measured_results_ts_grounded():
+    """Every mAP50 / fireAP50 in measuredResults.ts must match results/metrics/*.json."""
+    measured = get_all_measured_metrics()
+    code_text = MEASURED_RESULTS_PATH.read_text(encoding="utf-8")
+
+    values = re.findall(r"(?:mAP50|fireAP50):\s*(\d+\.\d+)", code_text)
+    assert values, "measuredResults.ts should contain measured runs"
+    for v in values:
+        assert _is_measured_fraction(float(v), measured), (
+            f"Unverified metric '{v}' found in measuredResults.ts! Must match results/metrics/*.json"
         )
 
 
 def test_fallback_presets_ts_grounded():
-    """Completed rounds in fallbackPresets.ts must only quote measured numbers."""
+    """Completed rounds in fallbackPresets.ts (stored in percent) must only quote measured numbers."""
     measured = get_all_measured_metrics()
     code_text = FALLBACK_PRESETS_PATH.read_text(encoding="utf-8")
+    start = code_text.index("ACTIVE_LEARNING_ROUNDS")
+    rounds_text = code_text[start:]
 
-    # Match each object inside ACTIVE_LEARNING_ROUNDS
-    round_blocks = re.findall(r"\{\s*round:\s*(\d+)[\s\S]*?status:\s*'([^']+)'", code_text)
-    for r_num, status in round_blocks:
-        if status == "completed":
-            # Search for mAP50 in this specific round block
-            pattern = rf"round:\s*{r_num}[\s\S]*?mAP50:\s*(\d+\.\d+)"
-            match = re.search(pattern, code_text)
-            assert match, f"Could not find mAP50 for round {r_num}"
-            val = float(match.group(1))
-            formatted3 = f"{val:.3f}"
-            formatted4 = f"{val:.4f}"
-            assert formatted3 in measured["raw_floats"] or formatted4 in measured["raw_floats"], (
-                f"Unverified completed mAP50 '{val}' found for round {r_num} in fallbackPresets.ts!"
+    for key in ["mAP50", "precision", "recall", "ap50"]:
+        for v in re.findall(rf"\b{key}:\s*(\d+\.\d+)", rounds_text):
+            assert _is_measured_fraction(float(v) / 100, measured), (
+                f"Unverified {key} '{v}%' found in fallbackPresets.ts!"
             )
+
+
+def test_components_have_no_unmeasured_percentages():
+    """Page components must not hard-code accuracy-style percentages (e.g. '88.4%').
+
+    Numbers belong in src/data/measuredResults.ts so they stay tied to results/metrics.
+    """
+    measured = get_all_measured_metrics()
+    offenders = []
+    for tsx in COMPONENTS_DIR.glob("*.tsx"):
+        for lit in re.findall(r"(?<![\w.])(\d{2}\.\d{1,2})%", tsx.read_text(encoding="utf-8")):
+            if not _is_measured_fraction(float(lit) / 100, measured, tol=0.0006):
+                offenders.append(f"{tsx.name}: {lit}%")
+    assert not offenders, f"Unmeasured percentage literals in components: {offenders}"
 
 
 def test_demo_script_grounded():

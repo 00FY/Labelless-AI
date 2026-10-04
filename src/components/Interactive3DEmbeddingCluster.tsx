@@ -4,12 +4,10 @@ import {
   Sliders,
   Zap,
   ArrowRight,
-  CheckCircle2,
   AlertTriangle,
   Sparkles,
   Eye,
   Play,
-  XCircle,
   Edit3,
   ListFilter
 } from 'lucide-react';
@@ -35,7 +33,7 @@ const SPOTLIGHT_FALLBACK_ITEMS: DatasetItem[] = [
     rareClassScore: 0.88,
     priorityScore: 0.92,
     priorityLevel: 'critical',
-    reasons: ['Model confidence is low (66%)', 'Structural damage underrepresented', 'High embedding distance'],
+    reasons: ['Model confidence is low (66%)', 'Rare-class boost applied', 'Multi-object scene'],
     explanation: {
       uncertaintyContribution: 0.51,
       diversityContribution: 0.06,
@@ -61,7 +59,7 @@ const SPOTLIGHT_FALLBACK_ITEMS: DatasetItem[] = [
     rareClassScore: 0.94,
     priorityScore: 0.88,
     priorityLevel: 'critical',
-    reasons: ['Fire is a rare class (< 5% dataset)', 'High thermal boundary entropy', 'Outlier vector candidate'],
+    reasons: ['Rare-class boost applied', 'Low model confidence', 'Multi-object scene'],
     explanation: {
       uncertaintyContribution: 0.57,
       diversityContribution: 0.08,
@@ -87,7 +85,7 @@ const SPOTLIGHT_FALLBACK_ITEMS: DatasetItem[] = [
     rareClassScore: 0.91,
     priorityScore: 0.85,
     priorityLevel: 'critical',
-    reasons: ['Smoke class underrepresented', 'High gradient uncertainty', 'Novel feature representation'],
+    reasons: ['Rare-class boost applied', 'Low model confidence', 'Multi-object scene'],
     explanation: {
       uncertaintyContribution: 0.61,
       diversityContribution: 0.09,
@@ -144,18 +142,16 @@ export const AITriageWorkbench: React.FC<Props> = ({
     return rawDatasetItems && rawDatasetItems.length > 0 ? rawDatasetItems : SPOTLIGHT_FALLBACK_ITEMS;
   }, [rawDatasetItems]);
 
-  const [threshold, setThreshold] = useState<number>(0.85);
   const [selectedItem, setSelectedItem] = useState<DatasetItem>(datasetItems[0] || SPOTLIGHT_FALLBACK_ITEMS[0]);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simStep, setSimStep] = useState<number>(0);
   const [simMessage, setSimMessage] = useState<string>('');
-  const [userActionFeedback, setUserActionFeedback] = useState<string | null>(null);
 
-  // Compute live triage metrics
-  const totalCount = 12480;
-  const autoCount = Math.round(totalCount * (threshold <= 0.65 ? 0.45 : threshold <= 0.85 ? 0.76 : 0.88));
-  const pendingCount = totalCount - autoCount;
-  const effortSavedPct = ((autoCount / totalCount) * 100).toFixed(1);
+  // Triage counts from the loaded queue
+  const totalCount = datasetItems.length;
+  const autoCount = datasetItems.filter((i) => i.status === 'auto_labeled').length;
+  const pendingCount = datasetItems.filter((i) => i.status === 'pending').length;
+  const autoRoutedPct = totalCount ? ((autoCount / totalCount) * 100).toFixed(1) : '0.0';
 
   // Top 4 priority spotlight items only
   const spotlightItems = useMemo(() => {
@@ -163,23 +159,11 @@ export const AITriageWorkbench: React.FC<Props> = ({
     return list.slice(0, 4);
   }, [datasetItems]);
 
-  // Handle Action Button click (Accept / Correct / Reject)
-  const handleAction = (action: 'accept' | 'correct' | 'reject') => {
-    if (action === 'accept') {
-      setUserActionFeedback(`✓ ACCEPTED #${selectedItem.id.slice(0, 6)} — Saved to data/reviewed_labels.json`);
-    } else if (action === 'correct') {
-      setUserActionFeedback(`✏️ CORRECTED #${selectedItem.id.slice(0, 6)} — Added to Round 2 Retraining Set`);
-    } else {
-      setUserActionFeedback(`✕ REJECTED #${selectedItem.id.slice(0, 6)} — Removed false detection`);
-    }
-    setTimeout(() => setUserActionFeedback(null), 3000);
-  };
-
   // Run Signature AI Sorting Line Animation
   const handleRunActiveLearning = useCallback(() => {
     setIsSimulating(true);
     setSimStep(1);
-    setSimMessage('ANALYZING 12,480 DATASET IMAGES...');
+    setSimMessage(`ANALYZING ${totalCount.toLocaleString()} DATASET IMAGES...`);
 
     setTimeout(() => {
       setSimStep(2);
@@ -201,7 +185,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
       setSimStep(0);
       setSimMessage('');
     }, 3600);
-  }, [pendingCount]);
+  }, [pendingCount, totalCount]);
 
   return (
     <div className={`p-6 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl space-y-6 text-white ${className}`}>
@@ -243,8 +227,8 @@ export const AITriageWorkbench: React.FC<Props> = ({
             <div className="text-lg font-extrabold text-amber-400">{pendingCount.toLocaleString()}</div>
           </div>
           <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-center">
-            <div className="text-[10px] font-bold text-sky-400 uppercase">Effort Saved</div>
-            <div className="text-lg font-extrabold text-sky-400">{effortSavedPct}%</div>
+            <div className="text-[10px] font-bold text-sky-400 uppercase">Auto-Routed</div>
+            <div className="text-lg font-extrabold text-sky-400">{autoRoutedPct}%</div>
           </div>
         </div>
       </div>
@@ -273,7 +257,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
         {/* Horizontal Card Sorting Stream */}
         <div className="relative flex items-center gap-3 overflow-x-auto py-2 scrollbar-none">
           {spotlightItems.map((item, idx) => {
-            const isAuto = item.confidence >= threshold;
+            const isAuto = item.status === 'auto_labeled';
             return (
               <div
                 key={item.id || idx}
@@ -299,7 +283,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
                 <div className="text-[11px] font-bold text-white truncate">{item.predictedClass}</div>
                 <div className="text-[10px] font-mono text-slate-400 flex justify-between pt-0.5">
                   <span>Priority:</span>
-                  <span className="text-amber-400 font-bold">{(item.priorityScore || 0.72).toFixed(2)}</span>
+                  <span className="text-amber-400 font-bold">{(item.priorityScore ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             );
@@ -369,7 +353,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                     <div className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px]">
-                      {(item.priorityScore || 0.72).toFixed(2)} PRIORITY
+                      {(item.priorityScore ?? 0).toFixed(2)} PRIORITY
                     </div>
                   </div>
 
@@ -418,12 +402,8 @@ export const AITriageWorkbench: React.FC<Props> = ({
                       strokeWidth="2.5"
                       rx="6"
                     />
-                    <path
-                      d={`M ${box.x}% ${box.y + 6}% V ${box.y}% H ${box.x + 6}%`}
-                      stroke="#FFFFFF"
-                      strokeWidth="3"
-                      fill="none"
-                    />
+                    <line x1={`${box.x}%`} y1={`${box.y + 6}%`} x2={`${box.x}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                    <line x1={`${box.x}%`} y1={`${box.y}%`} x2={`${box.x + 6}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
                   </g>
                 ))}
               </svg>
@@ -447,7 +427,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
               <div className="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-300">
                 <span>WHY THIS IMAGE?</span>
                 <span className="font-mono text-amber-400 font-extrabold text-sm">
-                  PRIORITY SCORE: {(selectedItem.priorityScore || 0.72).toFixed(2)}
+                  PRIORITY SCORE: {(selectedItem.priorityScore ?? 0).toFixed(2)}
                 </span>
               </div>
 
@@ -456,30 +436,30 @@ export const AITriageWorkbench: React.FC<Props> = ({
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
                     <span className="text-slate-400">UNCERTAINTY</span>
-                    <span className="text-amber-400 font-bold">{((selectedItem.uncertaintyScore || 0.74) * 100).toFixed(0)}%</span>
+                    <span className="text-amber-400 font-bold">{((selectedItem.uncertaintyScore ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(selectedItem.uncertaintyScore || 0.74) * 100}%` }} />
+                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(selectedItem.uncertaintyScore ?? 0) * 100}%` }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
                     <span className="text-slate-400">RARITY</span>
-                    <span className="text-purple-400 font-bold">{((selectedItem.rareClassScore || 0.88) * 100).toFixed(0)}%</span>
+                    <span className="text-purple-400 font-bold">{((selectedItem.rareClassScore ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${(selectedItem.rareClassScore || 0.88) * 100}%` }} />
+                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${(selectedItem.rareClassScore ?? 0) * 100}%` }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
                     <span className="text-slate-400">DIVERSITY</span>
-                    <span className="text-sky-400 font-bold">{((selectedItem.diversityScore || 0.62) * 100).toFixed(0)}%</span>
+                    <span className="text-sky-400 font-bold">{((selectedItem.diversityScore ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-sky-500 rounded-full" style={{ width: `${(selectedItem.diversityScore || 0.62) * 100}%` }} />
+                    <div className="h-full bg-sky-500 rounded-full" style={{ width: `${(selectedItem.diversityScore ?? 0) * 100}%` }} />
                   </div>
                 </div>
               </div>
@@ -497,11 +477,7 @@ export const AITriageWorkbench: React.FC<Props> = ({
                   <>
                     <div className="flex items-center gap-1.5 text-[11px]">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>Model confidence is low (66%)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px]">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>Fire / Damaged class underrepresented</span>
+                      <span>No ranking reasons recorded for this image</span>
                     </div>
                   </>
                 )}
@@ -509,37 +485,15 @@ export const AITriageWorkbench: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Decisions are made (and saved) in the Annotation Studio */}
           <div className="space-y-2 pt-2">
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleAction('accept')}
-                className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>[ ACCEPT ]</span>
-              </button>
-              <button
-                onClick={() => handleAction('correct')}
-                className="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
-              >
-                <Edit3 className="w-4 h-4" />
-                <span>[ CORRECT ]</span>
-              </button>
-              <button
-                onClick={() => handleAction('reject')}
-                className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
-              >
-                <XCircle className="w-4 h-4" />
-                <span>[ REJECT ]</span>
-              </button>
-            </div>
-
-            {userActionFeedback && (
-              <div className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/30 text-center animate-pulse">
-                {userActionFeedback}
-              </div>
-            )}
+            <button
+              onClick={() => onSelectImage?.(selectedItem)}
+              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
+            >
+              <Edit3 className="w-4 h-4" />
+              <span>Accept / Correct / Reject in Annotation Studio →</span>
+            </button>
           </div>
         </div>
       </div>

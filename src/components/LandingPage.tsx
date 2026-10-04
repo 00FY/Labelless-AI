@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { NavigationTab } from '../types';
+import { DatasetItem, NavigationTab } from '../types';
+import {
+  MEASURED_RUNS,
+  getRun,
+  pct,
+  pts,
+  getPoolRouting,
+} from '../data/measuredResults';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -22,24 +29,22 @@ interface LandingPageProps {
   onStartAnnotation: () => void;
   onViewDemoDataset: () => void;
   setActiveTab: (tab: NavigationTab) => void;
+  datasetItems: DatasetItem[];
 }
 
-// 5 Active Learning Rounds Data for Home Page Teaser Simulator
-const SIMULATOR_ROUNDS = [
-  { round: 0, label: 'Round 0 (Cold Start)', map50: 60.9, autoPct: 0, effortSaved: 0, reviewRate: 100, status: 'Initial Seed Model' },
-  { round: 1, label: 'Round 1 (First Feedback)', map50: 71.2, autoPct: 26, effortSaved: 18, reviewRate: 74, status: 'Triage Queue Active' },
-  { round: 2, label: 'Round 2 (Multi-Factor)', map50: 79.8, autoPct: 48, effortSaved: 32, reviewRate: 52, status: 'Uncertainty Fine-Tuned' },
-  { round: 3, label: 'Round 3 (Rare Class Sync)', map50: 85.1, autoPct: 65, effortSaved: 41, reviewRate: 35, status: 'High Auto-Accept' },
-  { round: 4, label: 'Round 4 (Final Model)', map50: 88.4, autoPct: 73.5, effortSaved: 47, reviewRate: 26.5, status: 'Max Efficiency Reached' },
-];
+// Measured runs shown in the hero comparison (see src/data/measuredResults.ts)
+const SHOWCASE_RUNS = MEASURED_RUNS;
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onStartAnnotation,
   onViewDemoDataset,
   setActiveTab,
+  datasetItems,
 }) => {
-  const [selectedRound, setSelectedRound] = useState<number>(4);
-  const currentSimData = SIMULATOR_ROUNDS[selectedRound];
+  const routing = getPoolRouting(datasetItems);
+  const [selectedRun, setSelectedRun] = useState<number>(SHOWCASE_RUNS.length - 1);
+  const currentRun = SHOWCASE_RUNS[selectedRun];
+  const seedRun = getRun('seed');
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -62,7 +67,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             The intelligent way to label
           </h1>
           <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
-            Let AI handle the obvious. Let humans focus on what matters. Cut annotation time by up to 94.5%.
+            Let AI handle the obvious. Let humans focus on what matters. Humans review only the images the model is unsure about.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <button
@@ -82,7 +87,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           </div>
           <p className="text-xs font-mono text-gray-400 pt-2">
-            ✦ YOLOv8 Engine · 47% Less Human Effort · 88.4% Final mAP@50
+            ✦ YOLOv8n · {pct(routing.autoFraction)} of pool auto-routed · {pct(getRun('labelless').mAP50)} mAP@50 after Round 1 (measured)
           </p>
         </div>
 
@@ -94,69 +99,71 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div>
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-sky-400 uppercase">
                 <Zap className="w-4 h-4" />
-                <span>Interactive Active Learning Simulator</span>
+                <span>Measured Strategy Comparison</span>
               </div>
               <h3 className="text-base font-extrabold text-white mt-0.5">
-                Model Accuracy & Effort Gain Over 5 Rounds
+                Same 100-label budget, different selection strategy
               </h3>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              {currentSimData.status}
+              {currentRun.sourceFile}
             </span>
           </div>
 
-          {/* Interactive Round Selector Slider */}
+          {/* Strategy selector */}
           <div className="space-y-2 p-4 rounded-2xl bg-slate-950 border border-slate-800">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
               <span className="flex items-center gap-2 font-mono">
                 <Sliders className="w-4 h-4 text-sky-400" />
-                Simulated Training Iteration:
+                Selection strategy:
               </span>
-              <span className="font-mono font-extrabold text-sky-400 text-sm">
-                Round {currentSimData.round}
-              </span>
+              <span className="font-mono font-extrabold text-sky-400 text-sm">{currentRun.label}</span>
             </div>
             <input
               type="range"
               min="0"
-              max="4"
+              max={SHOWCASE_RUNS.length - 1}
               step="1"
-              value={selectedRound}
-              onChange={(e) => setSelectedRound(parseInt(e.target.value))}
+              value={selectedRun}
+              onChange={(e) => setSelectedRun(parseInt(e.target.value))}
               className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
             />
-            <div className="grid grid-cols-5 text-[11px] font-mono text-slate-500 text-center pt-1">
-              <span className={selectedRound === 0 ? 'text-sky-400 font-bold' : ''}>Round 0 (Cold)</span>
-              <span className={selectedRound === 1 ? 'text-sky-400 font-bold' : ''}>Round 1</span>
-              <span className={selectedRound === 2 ? 'text-sky-400 font-bold' : ''}>Round 2</span>
-              <span className={selectedRound === 3 ? 'text-sky-400 font-bold' : ''}>Round 3</span>
-              <span className={selectedRound === 4 ? 'text-sky-400 font-bold' : ''}>Round 4 (Max)</span>
+            <div className="grid grid-cols-4 text-[11px] font-mono text-slate-500 text-center pt-1">
+              {SHOWCASE_RUNS.map((run, idx) => (
+                <span key={run.method} className={selectedRun === idx ? 'text-sky-400 font-bold' : ''}>
+                  {run.label}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Live Simulator Metrics Cards */}
+          {/* Measured metric cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
               <div className="text-[10px] text-slate-400 uppercase font-bold">Model Accuracy (mAP@50)</div>
-              <div className="text-3xl font-extrabold text-emerald-400">{currentSimData.map50}%</div>
-              <div className="text-[11px] text-slate-500">Started at 60.9% in Round 0</div>
+              <div className="text-3xl font-extrabold text-emerald-400">{pct(currentRun.mAP50)}</div>
+              <div className="text-[11px] text-slate-500">
+                {currentRun.round === 0 ? 'Seed model, no extra labels' : `${pts(currentRun.mAP50, seedRun.mAP50)} vs seed`}
+              </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Human Effort Saved</div>
-              <div className="text-3xl font-extrabold text-sky-400">{currentSimData.effortSaved}%</div>
-              <div className="text-[11px] text-slate-500">Auto-accepted predictions</div>
+              <div className="text-[10px] text-slate-400 uppercase font-bold">Fire AP@50</div>
+              <div className="text-3xl font-extrabold text-sky-400">{pct(currentRun.fireAP50)}</div>
+              <div className="text-[11px] text-slate-500">
+                {currentRun.round === 0 ? 'Seed model' : `${pts(currentRun.fireAP50, seedRun.fireAP50)} vs seed`}
+              </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Human Review Rate</div>
-              <div className="text-3xl font-extrabold text-amber-400">{currentSimData.reviewRate}%</div>
-              <div className="text-[11px] text-slate-500">Only {currentSimData.reviewRate}% requires human look</div>
+              <div className="text-[10px] text-slate-400 uppercase font-bold">Human Labels Added</div>
+              <div className="text-3xl font-extrabold text-amber-400">{currentRun.labelsAdded}</div>
+              <div className="text-[11px] text-slate-500">Equal budget for every strategy</div>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-slate-400 border-t border-slate-800/80">
-            <span>Verified YOLOv8 Active Learning Benchmarks</span>
+            <span>Measured on the held-out test split · single run, single seed</span>
             <button
               onClick={onStartAnnotation}
               className="text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1.5 transition-colors"
@@ -175,11 +182,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold uppercase text-gray-400">Traditional Manual Labeling</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gray-200 text-gray-700">100% Manual</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gray-200 text-gray-700">Every image</span>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-extrabold text-gray-900 font-mono">11.6 Hours</div>
-              <p className="text-xs text-gray-500">1,000 images × 42s manual box drawing per image.</p>
+              <div className="text-3xl font-extrabold text-gray-900 font-mono">{routing.poolImages} images</div>
+              <p className="text-xs text-gray-500">Every pool image goes to a human annotator.</p>
             </div>
             <ul className="space-y-1.5 text-xs text-gray-600 font-medium pt-2 border-t border-gray-200">
               <li className="flex items-center gap-2">
@@ -195,15 +202,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="p-6 rounded-2xl bg-emerald-950 text-white border border-emerald-800 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold uppercase text-emerald-400">LabelLess Active Pipeline</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">94.5% Faster</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">{pct(routing.humanFraction)} to humans</span>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-extrabold text-emerald-400 font-mono">38 Minutes</div>
-              <p className="text-xs text-emerald-200/70">265 uncertain images × 8.7s review per image.</p>
+              <div className="text-3xl font-extrabold text-emerald-400 font-mono">{routing.sentToHuman} images</div>
+              <p className="text-xs text-emerald-200/70">Only images above the priority threshold (0.58) reach a human.</p>
             </div>
             <ul className="space-y-1.5 text-xs text-emerald-100/90 font-medium pt-2 border-t border-emerald-800">
               <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400" /> AI auto-labels 73.5% obvious cases
+                <Check className="w-3.5 h-3.5 text-emerald-400" /> {pct(routing.autoFraction)} routed to auto-labelling
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-emerald-400" /> Humans review only what matters
@@ -236,7 +243,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-3 hover:border-gray-300 transition-colors">
             <div className="text-[11px] font-mono font-bold text-gray-400">03 REVIEW</div>
             <h4 className="font-semibold text-gray-900">Value Ranking</h4>
-            <p className="text-sm text-gray-500">Combines uncertainty, embedding diversity, and rare class imbalance to pick top gradient samples.</p>
+            <p className="text-sm text-gray-500">Combines model uncertainty, class rarity, and scene diversity into one priority score.</p>
           </div>
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-3 hover:border-gray-300 transition-colors">
             <div className="text-[11px] font-mono font-bold text-gray-400">04 RETRAIN</div>
@@ -282,7 +289,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span className="text-slate-400 font-semibold text-[11px] ml-1">triage_queue_live.stream</span>
                 </div>
                 <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  Priority 0.94 · Urgent Human Look
+                  Example #0128 · Priority 0.71 · Critical
                 </div>
               </div>
 
@@ -293,7 +300,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   alt="Triage Queue Visual"
                   className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?w=800&q=80';
+                    (e.target as HTMLImageElement).style.visibility = 'hidden';
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
@@ -304,30 +311,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   style={{ top: '24%', left: '26%', width: '40%', height: '48%' }}
                 >
                   <span className="text-[10px] font-mono font-bold bg-slate-950/90 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/40">
-                    🔥 Fire · 58% (Uncertain)
+                    Smoke · 26% (Uncertain)
                   </span>
                 </div>
 
                 {/* Heatmap Indicator */}
                 <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-900/90 backdrop-blur-md text-[10px] font-mono text-slate-300 border border-slate-700">
                   <Flame className="w-3 h-3 text-red-400" />
-                  <span>Rare Hazard Detected (&lt;5% frequency)</span>
+                  <span>Rare class in current predictions</span>
                 </div>
               </div>
 
               {/* Multi-Factor Telemetry Bar */}
               <div className="grid grid-cols-3 gap-2 text-center pt-1 font-mono text-xs">
                 <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                  <div className="text-[10px] text-slate-400 uppercase">Entropy</div>
-                  <div className="text-amber-400 font-bold">0.82 (High)</div>
+                  <div className="text-[10px] text-slate-400 uppercase">Uncertainty</div>
+                  <div className="text-amber-400 font-bold">0.74</div>
                 </div>
                 <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-400 uppercase">Rarity</div>
-                  <div className="text-rose-400 font-bold">0.94 (Rare)</div>
+                  <div className="text-rose-400 font-bold">0.80</div>
                 </div>
                 <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-400 uppercase">Diversity</div>
-                  <div className="text-sky-400 font-bold">0.78 (Novel)</div>
+                  <div className="text-sky-400 font-bold">0.35</div>
                 </div>
               </div>
             </div>
@@ -348,7 +355,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  +27.5% mAP Gain
+                  {pts(getRun('labelless').mAP50, seedRun.mAP50)} mAP in Round 1
                 </span>
               </div>
 
@@ -356,34 +363,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="grid grid-cols-2 gap-2.5 text-xs font-mono">
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
                   <div className="text-[10px] text-sky-400 font-bold uppercase">01. INFER & FILTER</div>
-                  <div className="text-sm font-extrabold text-white">73.5% Auto</div>
-                  <div className="text-[10px] text-slate-400">High confidence auto-passed</div>
+                  <div className="text-sm font-extrabold text-white">{pct(routing.autoFraction)} Auto</div>
+                  <div className="text-[10px] text-slate-400">Priority below 0.58</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
                   <div className="text-[10px] text-amber-400 font-bold uppercase">02. VALUE TRIAGE</div>
-                  <div className="text-sm font-extrabold text-white">26.5% Hard</div>
+                  <div className="text-sm font-extrabold text-white">{pct(routing.humanFraction)} Hard</div>
                   <div className="text-[10px] text-slate-400">Uncertain samples to human</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
                   <div className="text-[10px] text-emerald-400 font-bold uppercase">03. HUMAN REVIEW</div>
-                  <div className="text-sm font-extrabold text-white">8.7s / Image</div>
-                  <div className="text-[10px] text-slate-400">Rapid micro-corrections</div>
+                  <div className="text-sm font-extrabold text-white">Accept · Correct · Reject</div>
+                  <div className="text-[10px] text-slate-400">Saved for retraining</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
                   <div className="text-[10px] text-purple-400 font-bold uppercase">04. RETRAIN MODEL</div>
-                  <div className="text-sm font-extrabold text-white">88.4% mAP</div>
-                  <div className="text-[10px] text-slate-400">Compounds every round</div>
+                  <div className="text-sm font-extrabold text-white">{pct(getRun('labelless').mAP50)} mAP</div>
+                  <div className="text-[10px] text-slate-400">After Round 1 (measured)</div>
                 </div>
               </div>
 
               {/* Evolution Mini-Bar */}
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
                 <div className="flex justify-between text-[11px] font-mono">
-                  <span className="text-slate-400">YOLOv8 Accuracy Trajectory</span>
-                  <span className="text-emerald-400 font-bold">60.9% → 88.4% mAP@50</span>
+                  <span className="text-slate-400">Measured mAP@50, seed → Round 1</span>
+                  <span className="text-emerald-400 font-bold">{pct(seedRun.mAP50)} → {pct(getRun('labelless').mAP50)}</span>
                 </div>
                 <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-amber-500 via-sky-500 to-emerald-400 rounded-full w-[88.4%]" />
+                  <div className="h-full bg-gradient-to-r from-amber-500 via-sky-500 to-emerald-400 rounded-full" style={{ width: pct(getRun('labelless').mAP50) }} />
                 </div>
               </div>
             </div>
@@ -395,7 +402,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <h4 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Active Learning Loop</h4>
               <p className="text-gray-500 leading-relaxed text-sm sm:text-base">
-                Every verified correction feeds back into retraining. Over 5 iterations, accuracy jumped from 60.9% to 88.4% while slashing human effort by 47%.
+                Every verified correction feeds back into retraining. In the first measured round, 100 LabelLess-selected labels took mAP@50 from {pct(seedRun.mAP50)} to {pct(getRun('labelless').mAP50)} and Fire AP from {pct(seedRun.fireAP50)} to {pct(getRun('labelless').fireAP50)}.
               </p>
             </div>
           </div>
@@ -407,22 +414,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="space-y-2 text-center max-w-2xl mx-auto">
           <h2 className="section-label text-[11px] uppercase tracking-widest text-gray-400 font-bold">RESULTS</h2>
           <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Verified Experiment Benchmarks
+            Measured Experiment Results
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div id="impact-card-effort" className="bg-gray-50 border border-gray-200 rounded-2xl p-8 hover:border-gray-300 transition-colors text-center space-y-2">
-            <div className="text-5xl font-extrabold text-gray-900">47%</div>
-            <div className="font-medium text-gray-500">Human effort saved</div>
+            <div className="text-5xl font-extrabold text-gray-900">{pts(getRun('labelless').fireAP50, getRun('random').fireAP50)}</div>
+            <div className="font-medium text-gray-500">Fire AP@50 vs Random (same budget)</div>
           </div>
           <div id="impact-card-modelquality" className="bg-gray-50 border border-gray-200 rounded-2xl p-8 hover:border-gray-300 transition-colors text-center space-y-2">
-            <div className="text-5xl font-extrabold text-gray-900">88.4%</div>
-            <div className="font-medium text-gray-500">Final mAP@50</div>
+            <div className="text-5xl font-extrabold text-gray-900">{pct(getRun('labelless').mAP50)}</div>
+            <div className="font-medium text-gray-500">mAP@50 after Round 1</div>
           </div>
           <div id="impact-card-autolabel" className="bg-gray-50 border border-gray-200 rounded-2xl p-8 hover:border-gray-300 transition-colors text-center space-y-2">
-            <div className="text-5xl font-extrabold text-gray-900">26.5%</div>
-            <div className="font-medium text-gray-500">Review rate</div>
+            <div className="text-5xl font-extrabold text-gray-900">{pct(routing.humanFraction)}</div>
+            <div className="font-medium text-gray-500">Of pool routed to human review</div>
           </div>
         </div>
       </motion.section>

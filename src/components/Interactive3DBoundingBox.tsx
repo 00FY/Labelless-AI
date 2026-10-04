@@ -109,9 +109,9 @@ export const AIVisionInspector: React.FC<Props> = ({
         predictedClass: propItem.predictedClass,
         confidence: propItem.confidence,
         uncertainty: propItem.uncertaintyScore || (1 - propItem.confidence),
-        rarity: propItem.rareClassScore || 0.5,
-        diversity: propItem.diversityScore || 0.5,
-        priorityScore: propItem.priorityScore || 0.72,
+        rarity: propItem.rareClassScore ?? 0,
+        diversity: propItem.diversityScore ?? 0,
+        priorityScore: propItem.priorityScore ?? 0,
         boxes: propItem.boxes && propItem.boxes.length > 0 ? propItem.boxes : [
           { id: 'pb1', label: propItem.predictedClass, x: 20, y: 20, width: 55, height: 55, confidence: propItem.confidence }
         ],
@@ -289,18 +289,10 @@ export const AIVisionInspector: React.FC<Props> = ({
                 />
 
                 {/* Cyberpunk Tech Corner Brackets */}
-                <path
-                  d={`M ${box.x}% ${box.y + 4}% V ${box.y}% H ${box.x + 5}%`}
-                  stroke="#FFFFFF"
-                  strokeWidth="3"
-                  fill="none"
-                />
-                <path
-                  d={`M ${box.x + box.width - 5}% ${box.y}% H ${box.x + box.width}% V ${box.y + 4}%`}
-                  stroke="#FFFFFF"
-                  strokeWidth="3"
-                  fill="none"
-                />
+                <line x1={`${box.x}%`} y1={`${box.y + 4}%`} x2={`${box.x}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                <line x1={`${box.x}%`} y1={`${box.y}%`} x2={`${box.x + 5}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                <line x1={`${box.x + box.width - 5}%`} y1={`${box.y}%`} x2={`${box.x + box.width}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                <line x1={`${box.x + box.width}%`} y1={`${box.y}%`} x2={`${box.x + box.width}%`} y2={`${box.y + 4}%`} stroke="#FFFFFF" strokeWidth="3" />
               </g>
             );
           })}

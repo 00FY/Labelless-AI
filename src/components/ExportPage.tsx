@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem } from '../types';
-import { getLabellessEffort } from '../data/realMetrics';
+import { getRun } from '../data/measuredResults';
+import { getPipelineConfig } from '../data/pipelineConfig';
+
+// Map a box label ("Damaged Building" or "damagedbuilding") to its YOLO class id
+const classIdFor = (label: string): number => {
+  const norm = label.toLowerCase().replace(/\s+/g, '');
+  const cls = getPipelineConfig().classes.find((c) => c.yolo_name === norm);
+  return cls ? cls.id : -1;
+};
 import {
   Download,
   FileCode,
@@ -41,21 +49,15 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
         return true;
       })
       .map((item) => {
-        const action = item.status === 'rejected' ? 'reject' : item.status === 'human_reviewed' ? 'correct' : 'accept';
+        // A human-reviewed item is a correction only if a box was edited; otherwise the AI labels were accepted
+        const edited = item.boxes.some((b) => b.isHumanCorrected);
+        const action = item.status === 'rejected' ? 'reject' : item.status === 'human_reviewed' && edited ? 'correct' : 'accept';
         return {
           image_id: item.filename || `${item.id}.png`,
           action: action,
-          boxes: action === 'reject' ? [] : item.boxes.map((b) => {
+          boxes: action === 'reject' ? [] : item.boxes.filter((b) => classIdFor(b.label) >= 0).map((b) => {
             const normName = b.label.toLowerCase().replace(/\s+/g, '');
-            const clsId = normName.includes('undamaged')
-              ? 0
-              : normName.includes('damaged')
-              ? 1
-              : normName.includes('fire')
-              ? 2
-              : normName.includes('smoke')
-              ? 3
-              : 0;
+            const clsId = classIdFor(b.label);
             return {
               class_id: clsId,
               class_name: normName,
@@ -76,25 +78,44 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
     return JSON.stringify(getHumanLabelsPayload(), null, 2);
   };
 
-  // Sample exported payload preview
+  // Items that belong in a training export: reviewed or auto-labelled, never pending/rejected
+  const exportableItems = datasetItems.filter(
+    (i) =>
+      (i.status === 'human_reviewed' && includeHumanVerified) ||
+      (i.status === 'auto_labeled' && includeHighConfPseudo)
+  );
+
+  // YOLO format: "<class_id> <x_center> <y_center> <width> <height>", normalised 0-1.
+  // Box x/y are top-left percentages, so convert to centres.
   const getYoloPreview = () => {
-    return `# LabelLess AI Export - YOLOv8 Format
-# Dataset: ${config.datasetName} | Round ${config.currentRound}
-# Classes: ${config.classes.join(', ')}
-
-# image_1842.jpg
-0 0.4500 0.4900 0.6400 0.6800  # Building (Human Verified)
-4 0.6400 0.7900 0.3800 0.2800  # Debris (Human Verified)
-
-# image_0921.jpg
-3 0.5400 0.5200 0.4400 0.4800  # Fire (Human Verified)
-2 0.4900 0.6600 0.8200 0.5200  # Building (Human Verified)
-
-# image_0194.jpg
-1 0.5100 0.5200 0.5800 0.5200  # Vehicle (Auto Pseudo-Label: 98% conf)`;
+    const classes = getPipelineConfig().classes;
+    const header = [
+      '# LabelLess AI Export - YOLOv8 Format',
+      `# Dataset: ${config.datasetName} | Round ${config.currentRound}`,
+      `# Classes: ${classes.map((c) => `${c.id}=${c.yolo_name}`).join(', ')}`,
+    ];
+    const blocks = exportableItems
+      .filter((i) => i.boxes.length > 0)
+      .slice(0, 10)
+      .map((item) => {
+        const source = item.status === 'human_reviewed' ? 'Human Verified' : 'Auto Pseudo-Label';
+        const lines = item.boxes
+          .filter((b) => classIdFor(b.label) >= 0)
+          .map((b) => {
+            const xc = (b.x + b.width / 2) / 100;
+            const yc = (b.y + b.height / 2) / 100;
+            return `${classIdFor(b.label)} ${xc.toFixed(4)} ${yc.toFixed(4)} ${(b.width / 100).toFixed(4)} ${(
+              b.height / 100
+            ).toFixed(4)}  # ${b.label} (${source})`;
+          });
+        return [`# ${item.filename}`, ...lines].join('\n');
+      });
+    if (blocks.length === 0) blocks.push('# No reviewed or auto-labelled images with boxes yet');
+    return [...header, '', ...blocks].join('\n\n');
   };
 
   const getCocoPreview = () => {
+    const imgSize = getPipelineConfig().training.image_size;
     return JSON.stringify(
       {
         info: {
@@ -103,19 +124,20 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
           generator: 'LabelLess AI Active Learning Engine',
           date_created: '2026-08-27',
         },
-        categories: config.classes.map((c, i) => ({ id: i, name: c, supercategory: 'disaster' })),
-        images: datasetItems.slice(0, 10).map((item, idx) => ({
+        categories: getPipelineConfig().classes.map((c) => ({ id: c.id, name: c.yolo_name, supercategory: 'disaster' })),
+        images: exportableItems.slice(0, 10).map((item, idx) => ({
           id: idx + 1,
           file_name: item.filename || `${item.id}.png`,
-          width: 1000,
-          height: 800,
+          width: imgSize,
+          height: imgSize,
         })),
-        annotations: datasetItems.slice(0, 10).flatMap((item, idx) =>
+        annotations: exportableItems.slice(0, 10).flatMap((item, idx) =>
           item.boxes.map((box, bIdx) => ({
             id: idx * 10 + bIdx + 1,
             image_id: idx + 1,
-            category_id: 1,
-            bbox: [box.x * 10, box.y * 8, box.width * 10, box.height * 8],
+            category_id: classIdFor(box.label),
+            // COCO bbox is [x, y, width, height] in pixels; boxes are stored as percentages
+            bbox: [box.x, box.y, box.width, box.height].map((v) => Number(((v / 100) * imgSize).toFixed(1))),
             confidence: box.confidence,
             is_human_verified: item.status === 'human_reviewed',
           }))
@@ -163,13 +185,12 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
   };
 
   const handleDownloadModel = () => {
-    const effort = getLabellessEffort();
     const meta = JSON.stringify(
       {
         model: config.modelType,
         version: config.modelVersion,
         active_round: config.currentRound,
-        mAP50: parseFloat((effort.final_mAP50 * 100).toFixed(1)),
+        mAP50: parseFloat((getRun('labelless').mAP50 * 100).toFixed(1)),
         weights: `models/round_${config.currentRound}/best.pt`,
         classes: config.classes,
       },

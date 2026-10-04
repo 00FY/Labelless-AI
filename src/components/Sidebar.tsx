@@ -1,6 +1,6 @@
 import React from 'react';
-import { NavigationTab, ActiveLearningRound } from '../types';
-import { getLabellessEffort } from '../data/realMetrics';
+import { NavigationTab, ActiveLearningRound, DatasetItem } from '../types';
+import { getPoolRouting, getRun, pct } from '../data/measuredResults';
 import {
   LayoutDashboard,
   UploadCloud,
@@ -19,6 +19,7 @@ interface SidebarProps {
   setActiveTab: (tab: NavigationTab) => void;
   pendingReviewCount: number;
   rounds?: ActiveLearningRound[];
+  datasetItems: DatasetItem[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -26,11 +27,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   pendingReviewCount,
   rounds,
+  datasetItems,
 }) => {
-  const effort = getLabellessEffort();
+  const routing = getPoolRouting(datasetItems);
   const latestRound = rounds && rounds.length > 0 ? rounds[rounds.length - 1] : null;
-  const currentMap = latestRound ? `${latestRound.mAP50}%` : `${(effort.final_mAP50 * 100).toFixed(1)}%`;
-  const effortSaved = `${effort.effort_reduction_vs_baseline_pct.toFixed(0)}% Saved`;
+  const currentMap = latestRound ? `${latestRound.mAP50}%` : pct(getRun('labelless').mAP50);
   const sections = [
     {
       group: 'WORKSPACE',
@@ -125,8 +126,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="font-bold text-gray-900">{currentMap} mAP</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-500 text-[11px]">Effort Saved</span>
-            <span className="font-bold text-emerald-600">-{effort.effort_reduction_vs_baseline_pct.toFixed(0)}%</span>
+            <span className="text-gray-500 text-[11px]">Sent to Humans</span>
+            <span className="font-bold text-emerald-600">{pct(routing.humanFraction)}</span>
           </div>
         </div>
       </div>

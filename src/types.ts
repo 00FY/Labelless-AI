@@ -98,7 +98,7 @@ export interface ClassMetric {
   precision: number;
   recall: number;
   ap50: number;
-  samples: number;
+  samples?: number;
   color: string;
 }
 

@@ -16,7 +16,7 @@
 In time-critical disaster response and wildfire monitoring, teams are flooded with thousands of raw satellite and aerial images. Manually annotating every image is too slow and repetitive:
 
 - **Redundant Easy Samples**: Many images contain obvious, unambiguous patterns where human review adds zero marginal learning signal.
-- **Class Imbalance & Rare Objects**: Critical danger indicators like active **Fire** and **Smoke** appear in fewer than 5% of images. Naive random sampling or confidence-only sampling starves these rare classes.
+- **Class Imbalance & Rare Objects**: Some damage classes are predicted far less often than others (in the 971-image pool, *Damaged Building* is the least frequent prediction). Naive random sampling or confidence-only sampling can starve these classes, so the ranking adds an inverse-frequency rarity term.
 - **The Solution**: An active learning pipeline that routes clear cases ($\ge 85\%$ confidence) into an auto-label pool, and ranks remaining images using a **Tri-Factor formula** that balances uncertainty, rare-class representation, and spatial diversity.
 
 ---

@@ -55,7 +55,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               AI Annotation in Progress
             </h1>
             <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-              ● Active Stream
+              ● Replay of Processed Pool
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500">
@@ -221,11 +221,11 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                   <div className="text-gray-900 font-semibold">Active Learning Policy:</div>
                   {currentSample.status === 'auto_labeled' ? (
                     <p>
-                      Confidence &ge; 85% with low embedding entropy. Bounding coordinates added directly to pseudo-labeled training corpus.
+                      Priority below the 0.58 review threshold. Predicted boxes kept as pseudo-labels for training.
                     </p>
                   ) : (
                     <p>
-                      Confidence &lt; 85% or rare class detected. Routed to high-priority review queue with calculated value score.
+                      Priority 0.58 or above (uncertainty, rarity and diversity combined). Routed to the human review queue.
                     </p>
                   )}
                 </div>

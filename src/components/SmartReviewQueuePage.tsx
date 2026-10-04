@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DatasetItem, NavigationTab } from '../types';
+import { getPipelineConfig } from '../data/pipelineConfig';
 import {
   Layers,
   Filter,
@@ -51,6 +52,19 @@ export const SmartReviewQueuePage: React.FC<SmartReviewQueuePageProps> = ({
     }
     return true;
   });
+
+  const levels = getPipelineConfig().routing.priority_levels;
+  const fmt = (n: number) => n.toFixed(2);
+
+  // Class options and their share of the loaded queue, computed from the data
+  const classCounts: Record<string, number> = {};
+  datasetItems.forEach((i) => {
+    classCounts[i.predictedClass] = (classCounts[i.predictedClass] || 0) + 1;
+  });
+  const classOptions = Object.entries(classCounts).sort((a, b) => b[1] - a[1]);
+
+  const priorityLabel = (level: DatasetItem['priorityLevel']) =>
+    level === 'critical' ? 'CRITICAL' : level === 'high' ? 'HIGH' : level === 'medium' ? 'MEDIUM' : 'LOW';
 
   const getScoreTag = (score: number) => {
     if (score >= 0.75) return { text: 'HIGH', color: 'text-red-700 bg-red-50 border-red-200' };
@@ -116,10 +130,10 @@ export const SmartReviewQueuePage: React.FC<SmartReviewQueuePageProps> = ({
               className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-900 font-medium focus:outline-none focus:border-gray-300 focus:bg-white transition-colors"
             >
               <option value="all">All Priorities</option>
-              <option value="critical">🔴 Critical (&ge;0.90)</option>
-              <option value="high">🟠 High (0.80 - 0.89)</option>
-              <option value="medium">🟡 Medium (0.50 - 0.79)</option>
-              <option value="low">🟢 Low / Auto (&lt;0.50)</option>
+              <option value="critical">🔴 Critical (&ge;{fmt(levels.critical)})</option>
+              <option value="high">🟠 High ({fmt(levels.high)} – {fmt(levels.critical)})</option>
+              <option value="medium">🟡 Medium ({fmt(levels.medium)} – {fmt(levels.high)})</option>
+              <option value="low">🟢 Low (&lt;{fmt(levels.medium)})</option>
             </select>
           </div>
 
@@ -132,11 +146,11 @@ export const SmartReviewQueuePage: React.FC<SmartReviewQueuePageProps> = ({
               className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-900 font-medium focus:outline-none focus:border-gray-300 focus:bg-white transition-colors"
             >
               <option value="all">All Classes</option>
-              <option value="Building">Building (Structural)</option>
-              <option value="Fire">Fire (Rare 5.4%)</option>
-              <option value="Debris">Debris (Rare 3.2%)</option>
-              <option value="Vehicle">Vehicle</option>
-              <option value="Person">Person</option>
+              {classOptions.map(([cls, count]) => (
+                <option key={cls} value={cls}>
+                  {cls} ({((count / datasetItems.length) * 100).toFixed(1)}% of queue)
+                </option>
+              ))}
             </select>
           </div>
 
@@ -151,6 +165,7 @@ export const SmartReviewQueuePage: React.FC<SmartReviewQueuePageProps> = ({
               <option value="pending">Pending Review Only</option>
               <option value="human_reviewed">Human Reviewed</option>
               <option value="auto_labeled">Auto-Labeled</option>
+              <option value="rejected">Rejected</option>
               <option value="all">All Statuses</option>
             </select>
           </div>
@@ -292,7 +307,7 @@ export const SmartReviewQueuePage: React.FC<SmartReviewQueuePageProps> = ({
                                 : 'bg-gray-100 text-gray-700 border-gray-200'
                             }`}
                           >
-                            <span>{item.priorityLevel === 'critical' ? '🔴' : item.priorityLevel === 'high' ? '🟠' : '🟡'}</span>
+                            <span>{item.priorityLevel === 'critical' ? '🔴' : item.priorityLevel === 'high' ? '🟠' : item.priorityLevel === 'medium' ? '🟡' : '🟢'}</span>
                             <span>{item.priorityScore.toFixed(2)}</span>
                           </span>
                         </td>
@@ -382,8 +397,16 @@ export const SmartReviewQueuePage: React.FC<SmartReviewQueuePageProps> = ({
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Review Priority Score
                   </span>
-                  <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-red-50 text-red-700 border border-red-200">
-                    {selectedPreviewItem.priorityScore.toFixed(2)} VERY HIGH
+                  <span
+                    className={`px-2 py-0.5 text-xs font-bold rounded-md border ${
+                      selectedPreviewItem.priorityLevel === 'critical'
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : selectedPreviewItem.priorityLevel === 'high'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    {selectedPreviewItem.priorityScore.toFixed(2)} {priorityLabel(selectedPreviewItem.priorityLevel)}
                   </span>
                 </div>
 

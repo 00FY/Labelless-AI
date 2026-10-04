@@ -161,10 +161,11 @@ def sync_data(queue_path: Path, preds_path: Path, output_path: Path):
             "priorityLevel": priority_level,
             "reasons": item.get("reasons", [item.get("reason", "Active learning priority")]),
             "explanation": {
-                "uncertaintyContribution": round(priority_score * _W_UNC, 2),
-                "diversityContribution": round(priority_score * _W_DIV, 2),
-                "rareClassContribution": round(priority_score * _W_RARE, 2),
-                "recommendation": "Review suggested" if priority_score >= 0.45 else "Auto-labeled candidate",
+                # Each term is weight x component score, so the three sum to priorityScore
+                "uncertaintyContribution": round(_W_UNC * float(item.get("uncertainty_score", 0.5)), 2),
+                "diversityContribution": round(_W_DIV * float(item.get("diversity_score", 0.5)), 2),
+                "rareClassContribution": round(_W_RARE * float(item.get("rare_class_score", 0.2)), 2),
+                "recommendation": "Review suggested" if status == "pending" else "Auto-labeled candidate",
                 "bulletPoints": [
                     f"Model uncertainty: {item.get('uncertainty_score', 0.5):.1%}",
                     f"Detected objects: {len(boxes)}",

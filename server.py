@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # Ensure UTF-8 output on Windows
 if sys.platform == "win32":
@@ -84,13 +84,24 @@ app.add_middleware(
 
 class BoundingBox(BaseModel):
     id: Optional[str] = None
-    className: str
+    # The React UI sends "label"; older clients send "className". Accept either, store both.
+    label: Optional[str] = None
+    className: Optional[str] = None
     confidence: Optional[float] = 1.0
     x: float
     y: float
     width: float
     height: float
     color: Optional[str] = None
+    isHumanCorrected: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def _fill_class_name(self):
+        name = self.label or self.className
+        if not name:
+            raise ValueError("box needs a 'label' or 'className'")
+        self.label = self.className = name
+        return self
 
 
 class LabelSubmission(BaseModel):
@@ -125,6 +136,7 @@ def load_reviewed_labels() -> Dict[str, Any]:
 
 
 def save_reviewed_labels(data: Dict[str, Any]) -> None:
+    REVIEWED_LABELS_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(REVIEWED_LABELS_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -229,8 +241,11 @@ def get_queue(status_filter: Optional[str] = None):
 @app.post("/api/label")
 def submit_label(submission: LabelSubmission):
     """
-    Persists human annotation / review to disk.
-    Updates data/reviewed_labels.json and synchronizes public/ranked_dataset.json.
+    Persists human annotation / review to data/reviewed_labels.json.
+
+    public/ranked_dataset.json is deliberately left untouched: GET /api/queue overlays
+    saved reviews onto it, and rewriting a file under public/ makes the Vite dev server
+    reload the page after every save.
     """
     reviews = load_reviewed_labels()
     
@@ -247,25 +262,6 @@ def submit_label(submission: LabelSubmission):
     
     reviews[submission.image_id] = review_record
     save_reviewed_labels(reviews)
-
-    # Also update public/ranked_dataset.json so static fetches see the updated status
-    if FRONTEND_DATASET_PATH.exists():
-        try:
-            with open(FRONTEND_DATASET_PATH, "r", encoding="utf-8") as f:
-                dataset = json.load(f)
-            
-            for item in dataset:
-                if item.get("id") == submission.image_id:
-                    item["status"] = submission.status
-                    item["humanReviewed"] = True
-                    if submission.boxes:
-                        item["boxes"] = [b.model_dump() for b in submission.boxes]
-                    break
-            
-            with open(FRONTEND_DATASET_PATH, "w", encoding="utf-8") as f:
-                json.dump(dataset, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"[WARN] Could not update public/ranked_dataset.json: {e}")
 
     return {
         "success": True,

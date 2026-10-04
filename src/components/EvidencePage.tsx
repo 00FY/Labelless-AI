@@ -168,19 +168,19 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ setActiveTab }) => {
             <span>Dataset & Split</span>
           </div>
           <div className="text-2xl font-bold text-gray-900">
-            {data.setup.total_images.toLocaleString()} <span className="text-sm font-normal text-gray-500">total images</span>
+            ≈{data.setup.total_images.toLocaleString()} <span className="text-sm font-normal text-gray-500">total images</span>
           </div>
           <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100 text-center">
             <div className="bg-gray-50 p-2 rounded">
-              <div className="text-xs text-gray-500">Seed (10%)</div>
-              <div className="text-sm font-bold text-gray-800">{data.setup.seed_count}</div>
+              <div className="text-xs text-gray-500">Seed (est.)</div>
+              <div className="text-sm font-bold text-gray-800">≈{data.setup.seed_count}</div>
             </div>
             <div className="bg-gray-50 p-2 rounded">
-              <div className="text-xs text-gray-500">Pool (70%)</div>
+              <div className="text-xs text-gray-500">Pool</div>
               <div className="text-sm font-bold text-gray-800">{data.setup.pool_count}</div>
             </div>
             <div className="bg-gray-50 p-2 rounded">
-              <div className="text-xs text-gray-500">Test (20%)</div>
+              <div className="text-xs text-gray-500">Test (fixed)</div>
               <div className="text-sm font-bold text-gray-800">{data.setup.test_count}</div>
             </div>
           </div>
@@ -354,7 +354,7 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ setActiveTab }) => {
               </p>
             </div>
             <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2.5 py-1 rounded">
-              eval_set: test (277 images)
+              eval_set: test ({data.setup.test_count} images)
             </span>
           </div>
 

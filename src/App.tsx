@@ -20,7 +20,7 @@ import { EvidencePage } from './components/EvidencePage';
 import { ExportPage } from './components/ExportPage';
 import { ExplainDecisionModal } from './components/ExplainDecisionModal';
 
-import { fetchQueue, submitHumanLabel, advanceRound } from './services/api';
+import { fetchQueue, submitHumanLabel, saveLocalReview } from './services/api';
 
 export const App: React.FC = () => {
   const getUrlTab = (): NavigationTab => {
@@ -53,11 +53,24 @@ export const App: React.FC = () => {
   const [datasetItems, setDatasetItems] = useState<DatasetItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveBackend, setIsLiveBackend] = useState(false);
-  const [rounds, setRounds] = useState<ActiveLearningRound[]>(ACTIVE_LEARNING_ROUNDS);
+  const [rounds] = useState<ActiveLearningRound[]>(ACTIVE_LEARNING_ROUNDS);
   const [selectedItemForWorkspace, setSelectedItemForWorkspace] = useState<DatasetItem | null>(
     null
   );
   const [explainItem, setExplainItem] = useState<DatasetItem | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
+
+  // Keep the open workspace image in the URL so a refresh returns to it
+  const setWorkspaceItem = (item: DatasetItem) => {
+    setSelectedItemForWorkspace(item);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('item', item.id);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // ignore
+    }
+  };
 
   // Load pipeline config and real active-learning ranked data
   React.useEffect(() => {
@@ -70,7 +83,8 @@ export const App: React.FC = () => {
         setIsLiveBackend(isLive);
         if (Array.isArray(items) && items.length > 0) {
           setDatasetItems(items);
-          setSelectedItemForWorkspace(items[0]);
+          const urlItemId = new URLSearchParams(window.location.search).get('item');
+          setSelectedItemForWorkspace(items.find((i) => i.id === urlItemId) || items[0]);
         }
       })
       .catch(() => {
@@ -84,32 +98,26 @@ export const App: React.FC = () => {
   // Update a single item from workspace or queue with disk persistence
   const handleUpdateItem = (updated: DatasetItem) => {
     setDatasetItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-    setSelectedItemForWorkspace(updated);
-    // Persist human review to backend / disk
-    submitHumanLabel(
-      updated,
-      updated.status || 'human_reviewed'
-    );
+    setWorkspaceItem(updated);
+    // Keep a browser copy, then persist to the backend (data/reviewed_labels.json)
+    saveLocalReview(updated);
+    submitHumanLabel(updated, updated.status || 'human_reviewed').then((ok) => {
+      if (!ok) {
+        setSaveNotice('Backend not reachable: this review is saved in this browser only.');
+        setTimeout(() => setSaveNotice(null), 4000);
+      }
+    });
   };
 
   // Switch to workspace with specific item
   const handleSelectImageForWorkspace = (item: DatasetItem) => {
-    setSelectedItemForWorkspace(item);
+    setWorkspaceItem(item);
     setActiveTab('workspace');
   };
 
   // Open the "Why this image?" active-learning modal
   const handleOpenExplainModal = (item: DatasetItem) => {
     setExplainItem(item);
-  };
-
-  // Trigger retraining / round progression
-  const handleTriggerRetrain = async () => {
-    const nextRoundNumber = rounds.length;
-    await advanceRound(nextRoundNumber);
-    setRounds((prev) => [
-      ...prev.map((r) => (r.round === 3 ? { ...r, status: 'completed' as const } : r)),
-    ]);
   };
 
   return (
@@ -131,6 +139,7 @@ export const App: React.FC = () => {
           setActiveTab={setActiveTab}
           pendingReviewCount={datasetItems.filter((i) => i.status === 'pending').length}
           rounds={rounds}
+          datasetItems={datasetItems}
         />
 
         {/* Dynamic Page Content Stage */}
@@ -172,6 +181,7 @@ export const App: React.FC = () => {
                 onStartAnnotation={() => setActiveTab('upload')}
                 onViewDemoDataset={() => setActiveTab('dashboard')}
                 setActiveTab={setActiveTab}
+                datasetItems={datasetItems}
               />
             )}
 
@@ -213,7 +223,7 @@ export const App: React.FC = () => {
                 item={selectedItemForWorkspace}
                 datasetItems={datasetItems}
                 onUpdateItem={handleUpdateItem}
-                onNavigateItem={(next) => setSelectedItemForWorkspace(next)}
+                onNavigateItem={setWorkspaceItem}
                 onExplainItem={handleOpenExplainModal}
                 setActiveTab={setActiveTab}
               />
@@ -222,7 +232,7 @@ export const App: React.FC = () => {
             {!isLoading && (activeTab === 'evolution' || activeTab === 'model_improvement' || activeTab === 'retrain') && (
               <EvolutionImpactPage
                 rounds={rounds}
-                onTriggerRetrain={handleTriggerRetrain}
+                datasetItems={datasetItems}
                 setActiveTab={setActiveTab}
               />
             )}
@@ -243,11 +253,21 @@ export const App: React.FC = () => {
         </main>
       </div>
 
+      {saveNotice && (
+        <div
+          role="status"
+          className="fixed bottom-4 left-4 z-50 max-w-sm px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium shadow-sm"
+        >
+          {saveNotice}
+        </div>
+      )}
+
       {/* "Why This Image?" Active Learning Diagnostic Modal (Innovation pitch highlight) */}
       <ExplainDecisionModal
         isOpen={!!explainItem}
         onClose={() => setExplainItem(null)}
         item={explainItem}
+        onOpenWorkspace={handleSelectImageForWorkspace}
       />
     </div>
   );

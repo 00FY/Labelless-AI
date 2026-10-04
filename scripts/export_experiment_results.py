@@ -248,6 +248,19 @@ def build_ablation(loaded: dict[str, dict]) -> list[dict]:
 # Build setup metadata from config.yaml + seed metrics
 # ---------------------------------------------------------------------------
 
+# Settings of the run that produced results/metrics/*.json (scripts/run_all_experiments.py
+# CPU defaults). These differ from config.yaml's training block, so report them explicitly.
+EXPERIMENT_RUN = {
+    "epochs_seed": 50,
+    "epochs_round": 15,
+    "batch_size": 8,
+    "image_size": 416,
+    "patience": 5,
+    "device": "cpu",
+    "test_count": 311,  # fixed held-out test split (data/test)
+}
+
+
 def build_setup(loaded: dict[str, dict]) -> dict:
     seed = loaded.get("round_0_seed.json", {})
     total_pool = seed.get("total_pool_images")
@@ -282,9 +295,10 @@ def build_setup(loaded: dict[str, dict]) -> dict:
     seed_pct  = cfg["dataset"].get("seed_pct",  0.10)
     test_pct  = cfg["dataset"].get("test_pct",  0.20)
 
-    total_images = round(total_pool / pool_pct)
-    seed_count   = round(total_images * seed_pct)
-    test_count   = round(total_images * test_pct)
+    # Test size is known; the seed count is not recorded anywhere, so estimate it from the ratios
+    test_count   = EXPERIMENT_RUN["test_count"]
+    seed_count   = round(total_pool / pool_pct * seed_pct)
+    total_images = seed_count + total_pool + test_count
 
     return {
         "dataset":    _PROJECT.get("dataset_name", "unknown"),
@@ -293,19 +307,14 @@ def build_setup(loaded: dict[str, dict]) -> dict:
         "seed_count":   seed_count,
         "pool_count":   total_pool,
         "test_count":   test_count,
+        "seed_count_is_estimate": True,
         "split_ratios": {
             "seed": seed_pct,
             "pool": pool_pct,
             "test": test_pct,
         },
         "random_seed": cfg["dataset"].get("random_seed", 42),
-        "training": {
-            "epochs_seed":  _TRAINING.get("epochs_seed", "unknown"),
-            "epochs_round": _TRAINING.get("epochs_round", "unknown"),
-            "batch_size":   _TRAINING.get("batch_size", "unknown"),
-            "image_size":   _TRAINING.get("image_size", "unknown"),
-            "patience":     _TRAINING.get("patience", "unknown"),
-        },
+        "training": {k: EXPERIMENT_RUN[k] for k in ("epochs_seed", "epochs_round", "batch_size", "image_size", "patience", "device")},
         "classes": [c["yolo_name"] for c in _CLASSES],
     }
 
@@ -370,8 +379,10 @@ def main():
         },
         "limitations": [
             "Round 0 cold-start baseline is shared across all strategies — active-learning divergence appears from Round 1 onward.",
-            "All strategy comparison and ablation experiments were evaluated under identical CPU hardware, batch size (8), image size (416), and budget (100) constraints.",
-            "Metrics were computed against a fixed, held-out test split of 311 images.",
+            f"All strategy comparison and ablation experiments were evaluated under identical CPU hardware, batch size ({EXPERIMENT_RUN['batch_size']}), image size ({EXPERIMENT_RUN['image_size']}), and budget (100) constraints.",
+            f"Metrics were computed against a fixed, held-out test split of {EXPERIMENT_RUN['test_count']} images.",
+            "Seed-set size is estimated from the configured split ratios.",
+            "Single run with one random seed; differences of about one mAP point are within run-to-run noise.",
             "Model: YOLOv8n (Nano) — a lightweight real-time object detector chosen for fast active-learning iteration.",
         ],
     }
