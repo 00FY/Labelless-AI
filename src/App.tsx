@@ -20,7 +20,7 @@ import { EvidencePage } from './components/EvidencePage';
 import { ExportPage } from './components/ExportPage';
 import { ExplainDecisionModal } from './components/ExplainDecisionModal';
 
-import { fetchQueue, submitHumanLabel, advanceRound } from './services/api';
+import { fetchQueue, submitHumanLabel } from './services/api';
 
 export const App: React.FC = () => {
   const getUrlTab = (): NavigationTab => {
@@ -53,7 +53,7 @@ export const App: React.FC = () => {
   const [datasetItems, setDatasetItems] = useState<DatasetItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveBackend, setIsLiveBackend] = useState(false);
-  const [rounds, setRounds] = useState<ActiveLearningRound[]>(ACTIVE_LEARNING_ROUNDS);
+  const [rounds] = useState<ActiveLearningRound[]>(ACTIVE_LEARNING_ROUNDS);
   const [selectedItemForWorkspace, setSelectedItemForWorkspace] = useState<DatasetItem | null>(
     null
   );
@@ -101,15 +101,6 @@ export const App: React.FC = () => {
   // Open the "Why this image?" active-learning modal
   const handleOpenExplainModal = (item: DatasetItem) => {
     setExplainItem(item);
-  };
-
-  // Trigger retraining / round progression
-  const handleTriggerRetrain = async () => {
-    const nextRoundNumber = rounds.length;
-    await advanceRound(nextRoundNumber);
-    setRounds((prev) => [
-      ...prev.map((r) => (r.round === 3 ? { ...r, status: 'completed' as const } : r)),
-    ]);
   };
 
   return (
@@ -222,7 +213,6 @@ export const App: React.FC = () => {
             {!isLoading && (activeTab === 'evolution' || activeTab === 'model_improvement' || activeTab === 'retrain') && (
               <EvolutionImpactPage
                 rounds={rounds}
-                onTriggerRetrain={handleTriggerRetrain}
                 setActiveTab={setActiveTab}
               />
             )}

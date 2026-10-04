@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ACTIVE_LEARNING_ROUNDS } from '../data/fallbackPresets';
 import * as THREE from 'three';
 import { Sparkles, RotateCw, ZoomIn, Eye, Activity, Layers, Zap } from 'lucide-react';
 
@@ -11,7 +12,7 @@ interface InteractiveRetrainingMesh3DProps {
 export const InteractiveRetrainingMesh3D: React.FC<InteractiveRetrainingMesh3DProps> = ({
   className = '',
   height = 'h-72 sm:h-80',
-  currentRound = 4,
+  currentRound = 1,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeRound, setActiveRound] = useState<number>(currentRound);
@@ -306,13 +307,13 @@ export const InteractiveRetrainingMesh3D: React.FC<InteractiveRetrainingMesh3DPr
         wire.material.color.setHex(0xf59e0b);
         wire.material.opacity = 0.5;
         if (core) core.scale.set(0.8, 0.8, 0.8);
-      } else if (activeRound === 1 || activeRound === 2) {
+      } else if (activeRound < 0) {
         // Mid rounds: sky blue
         wire.material.color.setHex(0x0284c7);
         wire.material.opacity = 0.65;
         if (core) core.scale.set(1.0, 1.0, 1.0);
       } else {
-        // Converged Round 4: bright emerald cyan
+        // After human-labelled retraining: bright emerald
         wire.material.color.setHex(0x10b981);
         wire.material.opacity = 0.8;
         if (core) core.scale.set(1.15, 1.15, 1.15);
@@ -361,12 +362,12 @@ export const InteractiveRetrainingMesh3D: React.FC<InteractiveRetrainingMesh3DPr
           <span className="text-slate-500">|</span>
           <span className="text-slate-300 font-semibold">Round {activeRound}</span>
           <span className="text-emerald-400 font-bold">
-            {activeRound === 0 ? '60.9%' : activeRound === 1 ? '71.2%' : activeRound === 2 ? '79.8%' : activeRound === 3 ? '85.1%' : '88.4%'} mAP
+            {ACTIVE_LEARNING_ROUNDS.find((r) => r.round === activeRound)?.mAP50 ?? '—'}% mAP
           </span>
         </div>
         <div className="text-[10px] text-slate-400 font-mono px-1 flex items-center gap-1.5">
           <Activity className="w-3 h-3 text-sky-400" />
-          <span>Interactive: Click & Drag to Orbit · Scroll to Zoom</span>
+          <span>Illustrative visual · Click & Drag to Orbit · Scroll to Zoom</span>
         </div>
       </div>
 
@@ -387,7 +388,7 @@ export const InteractiveRetrainingMesh3D: React.FC<InteractiveRetrainingMesh3DPr
         {/* Round Switcher */}
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-slate-400 uppercase font-bold mr-1">Retrain Iteration:</span>
-          {[0, 1, 2, 3, 4].map((r) => (
+          {ACTIVE_LEARNING_ROUNDS.map(({ round: r }) => (
             <button
               key={r}
               onClick={() => setActiveRound(r)}

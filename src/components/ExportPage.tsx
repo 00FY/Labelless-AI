@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem } from '../types';
-import { getLabellessEffort } from '../data/realMetrics';
+import { getRun } from '../data/measuredResults';
 import {
   Download,
   FileCode,
@@ -163,13 +163,12 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
   };
 
   const handleDownloadModel = () => {
-    const effort = getLabellessEffort();
     const meta = JSON.stringify(
       {
         model: config.modelType,
         version: config.modelVersion,
         active_round: config.currentRound,
-        mAP50: parseFloat((effort.final_mAP50 * 100).toFixed(1)),
+        mAP50: parseFloat((getRun('labelless').mAP50 * 100).toFixed(1)),
         weights: `models/round_${config.currentRound}/best.pt`,
         classes: config.classes,
       },

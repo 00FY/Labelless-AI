@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem, ActiveLearningRound, NavigationTab } from '../types';
-import { getLabellessEffort, getMethodEffort } from '../data/realMetrics';
+import {
+  MEASURED_RUNS,
+  POOL_ROUTING,
+  AUTO_ROUTED_FRACTION,
+  HUMAN_ROUTED_FRACTION,
+  getRun,
+  pct,
+  pts,
+} from '../data/measuredResults';
+
+// Assumed manual review time per image, used only for the effort estimate
+const MANUAL_SEC_PER_IMAGE = 30;
 import { Interactive3DBoundingBox } from './Interactive3DBoundingBox';
 import { Interactive3DEmbeddingCluster } from './Interactive3DEmbeddingCluster';
 import {
@@ -38,11 +49,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onSelectImage,
   onExplainItem,
 }) => {
-  const [selectedRoundIndex, setSelectedRoundIndex] = useState(rounds.length - 1);
-  const currentRound = rounds[selectedRoundIndex] || rounds[rounds.length - 1];
+  const seedRun = getRun('seed');
+  const labellessRun = getRun('labelless');
+  const hoursAll = (POOL_ROUTING.poolImages * MANUAL_SEC_PER_IMAGE) / 3600;
+  const hoursRouted = (POOL_ROUTING.sentToHuman * MANUAL_SEC_PER_IMAGE) / 3600;
 
-  const effort = getLabellessEffort();
-  const randomEffort = getMethodEffort('random');
+  const classCountMap: Record<string, number> = {};
+  datasetItems.forEach((i) => {
+    classCountMap[i.predictedClass] = (classCountMap[i.predictedClass] || 0) + 1;
+  });
+  const classCounts = Object.entries(classCountMap).sort((a, b) => b[1] - a[1]);
 
   // Calculate dynamic stats directly from dataset items
   const totalImages = datasetItems.length || 971;
@@ -270,98 +286,57 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-gray-400" />
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
-                  Model Improvement Trajectory
+                  Measured Model Accuracy (mAP@50)
                 </h3>
               </div>
               <span className="text-xs font-bold font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
-                +27.5% mAP Gain (60.9% → 88.4%)
+                {pts(labellessRun.mAP50, seedRun.mAP50)} after Round 1
               </span>
             </div>
+            <p className="text-xs text-gray-500">
+              Each strategy adds the same 100 human labels to the seed model. Held-out test split.
+            </p>
           </div>
 
-          {/* Interactive Chart Visual */}
-          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-4">
-            {/* SVG Stepped Curve Chart */}
-            <div className="relative h-44 w-full">
-              <svg className="w-full h-full" viewBox="0 0 400 140" preserveAspectRatio="none">
-                {/* Horizontal Grid lines */}
-                <line x1="30" y1="15" x2="390" y2="15" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
-                <line x1="30" y1="50" x2="390" y2="50" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
-                <line x1="30" y1="85" x2="390" y2="85" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
-                <line x1="30" y1="120" x2="390" y2="120" stroke="#e5e7eb" strokeDasharray="3 3" strokeWidth="1" />
-
-                {/* Y-axis labels */}
-                <text x="5" y="18" fill="#6b7280" fontSize="9" fontFamily="monospace">90%</text>
-                <text x="5" y="53" fill="#6b7280" fontSize="9" fontFamily="monospace">80%</text>
-                <text x="5" y="88" fill="#6b7280" fontSize="9" fontFamily="monospace">70%</text>
-                <text x="5" y="123" fill="#6b7280" fontSize="9" fontFamily="monospace">60%</text>
-
-                {/* Shaded Area under curve */}
-                <path
-                  d="M 50 118 L 120 82 L 190 52 L 260 34 L 330 20 L 330 130 L 50 130 Z"
-                  fill="url(#gradMap)"
-                  opacity="0.3"
-                />
-
-                {/* Main Curve Line */}
-                <path
-                  d="M 50 118 L 120 82 L 190 52 L 260 34 L 330 20"
-                  fill="none"
-                  stroke="#111827"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Round Points */}
-                <circle cx="50" cy="118" r="4" fill="#111827" />
-                <circle cx="120" cy="82" r="4" fill="#111827" />
-                <circle cx="190" cy="52" r="4" fill="#111827" />
-                <circle cx="260" cy="34" r="4" fill="#111827" />
-                <circle cx="330" cy="20" r="5" fill="#059669" stroke="#fff" strokeWidth="2" />
-
-                {/* Point text */}
-                <text x="40" y="108" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">60.9%</text>
-                <text x="110" y="72" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">71.2%</text>
-                <text x="180" y="42" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">79.8%</text>
-                <text x="250" y="24" fill="#111827" fontSize="10" fontWeight="bold" fontFamily="monospace">85.1%</text>
-                <text x="320" y="12" fill="#059669" fontSize="11" fontWeight="bold" fontFamily="monospace">88.4%</text>
-
-                <defs>
-                  <linearGradient id="gradMap" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#d1d5db" />
-                    <stop offset="100%" stopColor="#f3f4f6" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
-            {/* Rounds Selector Tabs */}
-            <div className="grid grid-cols-5 gap-2 pt-2">
-              {rounds.map((r, idx) => (
-                <button
-                  key={r.round}
-                  onClick={() => setSelectedRoundIndex(idx)}
-                  className={`p-2 rounded-xl text-center transition-all border ${
-                    selectedRoundIndex === idx
-                      ? 'bg-white border-gray-400 text-gray-900 shadow-sm'
-                      : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <div className="text-[10px] font-bold text-gray-400">Round {r.round}</div>
-                  <div className={`text-xs font-mono font-bold ${selectedRoundIndex === idx ? 'text-gray-900' : 'text-gray-600'}`}>{r.mAP50}%</div>
-                </button>
-              ))}
-            </div>
+          {/* Measured runs — values from src/data/measuredResults.ts */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
+            {MEASURED_RUNS.map((run) => {
+              const isLabelless = run.method === 'labelless';
+              // Scale bars from 55% so small but real differences stay visible
+              const width = Math.max(4, ((run.mAP50 - 0.55) / (0.7 - 0.55)) * 100);
+              return (
+                <div key={run.method} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className={isLabelless ? 'font-bold text-gray-900' : 'text-gray-600'}>
+                      {run.label}
+                      {run.round > 0 && <span className="text-gray-400"> · +{run.labelsAdded} labels</span>}
+                    </span>
+                    <span className={`font-mono font-bold ${isLabelless ? 'text-emerald-600' : 'text-gray-700'}`}>
+                      {pct(run.mAP50)}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${isLabelless ? 'bg-emerald-500' : 'bg-gray-500'}`}
+                      style={{ width: `${width}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <p className="text-[11px] text-gray-500 pt-1">
+              Bar axis starts at 55%. Fire AP@50: {pct(labellessRun.fireAP50)} with LabelLess vs{' '}
+              {pct(getRun('random').fireAP50)} with Random. Single run, single seed.
+            </p>
           </div>
 
           <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
-            <span>Current Evaluated Model: <strong className="text-gray-900">YOLOv8 v2.3</strong></span>
+            <span>Model: <strong className="text-gray-900">YOLOv8n</strong></span>
             <button
-              onClick={() => setActiveTab('evolution')}
+              onClick={() => setActiveTab('evidence')}
               className="text-gray-600 hover:text-gray-900 font-semibold flex items-center gap-1"
             >
-              Detailed Breakdown & Class Matrix →
+              Full experiment evidence →
             </button>
           </div>
         </section>
@@ -407,7 +382,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="p-2.5 rounded-lg bg-white border border-gray-200 flex items-center justify-between shadow-2xs">
               <span className="flex items-center gap-1.5 text-xs text-gray-700 font-medium">
                 <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                Outlier Vector
+                Diversity
               </span>
               <span className="font-mono font-bold text-xs text-blue-600">{divPct}%</span>
             </div>
@@ -544,53 +519,48 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </h3>
             </div>
             <p className="text-xs text-gray-500">
-              Calculated real time savings for dataset round
+              Estimate from pool routing. Assumes {MANUAL_SEC_PER_IMAGE}s per manual review.
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500">Random / Confidence Baseline ({randomEffort?.human_review_pct.toFixed(0) || 41}% review):</span>
-              <span className="font-mono font-bold text-gray-700">{randomEffort?.human_hours_spent.toFixed(2) || '3.33'} Hours</span>
+              <span className="text-gray-500">Review every pool image ({POOL_ROUTING.poolImages}):</span>
+              <span className="font-mono font-bold text-gray-700">{hoursAll.toFixed(1)} Hours</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-700 font-semibold">With LabelLess Active Pipeline ({effort.human_review_pct.toFixed(1)}% review):</span>
-              <span className="font-mono font-bold text-gray-900">{effort.human_hours_spent.toFixed(2)} Hours</span>
+              <span className="text-gray-700 font-semibold">
+                Review only routed images ({POOL_ROUTING.sentToHuman}, {pct(HUMAN_ROUTED_FRACTION)}):
+              </span>
+              <span className="font-mono font-bold text-gray-900">{hoursRouted.toFixed(1)} Hours</span>
             </div>
             <div className="h-px bg-gray-200"></div>
             <div className="flex items-center justify-between text-sm font-bold">
               <span className="text-emerald-600 flex items-center gap-1.5">
                 <Check className="w-4 h-4" />
-                Net Time Saved:
+                Estimated Time Saved:
               </span>
               <span className="font-mono text-emerald-600 text-base">
-                {effort.human_hours_saved_vs_baseline.toFixed(2)} Hours Saved ({effort.effort_reduction_vs_baseline_pct.toFixed(1)}%)
+                {(hoursAll - hoursRouted).toFixed(1)} Hours ({pct(AUTO_ROUTED_FRACTION)})
               </span>
             </div>
+            <p className="text-[11px] text-gray-500">
+              The accuracy of the {POOL_ROUTING.autoLabeled} auto-labelled images has not been audited yet.
+            </p>
           </div>
 
-          {/* Dataset Health Indicators */}
+          {/* Class distribution of the current queue, computed from the loaded data */}
           <div className="p-3.5 rounded-xl bg-white border border-gray-200 space-y-2">
             <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-              Dataset Health Audit
+              Predicted Class Distribution
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-gray-500">Class Balance:</span>
-                <span className="text-emerald-600 font-semibold">Good</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-gray-500">Rare Classes:</span>
-                <span className="text-amber-600 font-semibold">2 Flagged</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-gray-500">Image Quality:</span>
-                <span className="text-emerald-600 font-semibold">High Res</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-gray-500">Missing Labels:</span>
-                <span className="text-emerald-600 font-semibold">0</span>
-              </div>
+              {classCounts.map(([cls, count]) => (
+                <div key={cls} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                  <span className="text-gray-500">{cls}:</span>
+                  <span className="text-gray-900 font-semibold font-mono">{count}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
