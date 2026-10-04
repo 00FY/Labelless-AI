@@ -60,6 +60,18 @@ export const App: React.FC = () => {
   const [explainItem, setExplainItem] = useState<DatasetItem | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
+  // Keep the open workspace image in the URL so a refresh returns to it
+  const setWorkspaceItem = (item: DatasetItem) => {
+    setSelectedItemForWorkspace(item);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('item', item.id);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // ignore
+    }
+  };
+
   // Load pipeline config and real active-learning ranked data
   React.useEffect(() => {
     // Load pipeline config (weights, thresholds) from the exported JSON
@@ -71,7 +83,8 @@ export const App: React.FC = () => {
         setIsLiveBackend(isLive);
         if (Array.isArray(items) && items.length > 0) {
           setDatasetItems(items);
-          setSelectedItemForWorkspace(items[0]);
+          const urlItemId = new URLSearchParams(window.location.search).get('item');
+          setSelectedItemForWorkspace(items.find((i) => i.id === urlItemId) || items[0]);
         }
       })
       .catch(() => {
@@ -85,7 +98,7 @@ export const App: React.FC = () => {
   // Update a single item from workspace or queue with disk persistence
   const handleUpdateItem = (updated: DatasetItem) => {
     setDatasetItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-    setSelectedItemForWorkspace(updated);
+    setWorkspaceItem(updated);
     // Keep a browser copy, then persist to the backend (data/reviewed_labels.json)
     saveLocalReview(updated);
     submitHumanLabel(updated, updated.status || 'human_reviewed').then((ok) => {
@@ -98,7 +111,7 @@ export const App: React.FC = () => {
 
   // Switch to workspace with specific item
   const handleSelectImageForWorkspace = (item: DatasetItem) => {
-    setSelectedItemForWorkspace(item);
+    setWorkspaceItem(item);
     setActiveTab('workspace');
   };
 
@@ -210,7 +223,7 @@ export const App: React.FC = () => {
                 item={selectedItemForWorkspace}
                 datasetItems={datasetItems}
                 onUpdateItem={handleUpdateItem}
-                onNavigateItem={(next) => setSelectedItemForWorkspace(next)}
+                onNavigateItem={setWorkspaceItem}
                 onExplainItem={handleOpenExplainModal}
                 setActiveTab={setActiveTab}
               />

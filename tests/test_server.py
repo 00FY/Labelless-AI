@@ -2,6 +2,7 @@
 tests/test_server.py - Validates FastAPI server endpoints and persistence
 """
 
+import json
 import sys
 from pathlib import Path
 import pytest
@@ -113,3 +114,13 @@ def test_round_advance_endpoint():
     summary = data["round_summary"]
     assert "mAP50" in summary["metrics"]
     assert "time_saved_hours" in summary
+
+
+def test_label_save_does_not_rewrite_public_dataset():
+    """Rewriting public/ranked_dataset.json makes the Vite dev server reload the page after every save."""
+    dataset = Path(__file__).resolve().parent.parent / "public" / "ranked_dataset.json"
+    before = dataset.read_bytes()
+    first_id = json.loads(before)[0]["id"]
+    payload = {"image_id": first_id, "status": "human_reviewed", "boxes": []}
+    assert client.post("/api/label", json=payload).status_code == 200
+    assert dataset.read_bytes() == before

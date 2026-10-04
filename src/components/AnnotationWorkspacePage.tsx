@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { DatasetItem, BoundingBox, FeedbackCategory, NavigationTab } from '../types';
 import { getPipelineConfig } from '../data/pipelineConfig';
-import { CLASS_COLORS } from '../data/fallbackPresets';
 import {
   Check,
   Edit2,
@@ -73,6 +72,13 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
   const prevItem = currentIndex > 0 ? datasetItems[currentIndex - 1] : null;
   const nextItem = currentIndex < datasetItems.length - 1 ? datasetItems[currentIndex + 1] : null;
 
+  // After a decision, continue with the next image still waiting for review (in queue order),
+  // wrapping around; auto-labelled and already-reviewed images are skipped.
+  const nextPendingItem =
+    [...datasetItems.slice(currentIndex + 1), ...datasetItems.slice(0, Math.max(currentIndex, 0))].find(
+      (i) => i.status === 'pending' && i.id !== item.id
+    ) || null;
+
   // Actions
   // Accept confirms the AI's boxes unchanged; edited boxes must go through Save Correction
   const hasEdits = JSON.stringify(boxes) !== JSON.stringify(item.boxes);
@@ -89,7 +95,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
     confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
     setTimeout(() => {
       setSaveToast(null);
-      if (nextItem) onNavigateItem(nextItem);
+      if (nextPendingItem) onNavigateItem(nextPendingItem);
     }, 900);
   };
 
@@ -107,7 +113,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
     confetti({ particleCount: 40, spread: 70, origin: { y: 0.8 } });
     setTimeout(() => {
       setSaveToast(null);
-      if (nextItem) onNavigateItem(nextItem);
+      if (nextPendingItem) onNavigateItem(nextPendingItem);
     }, 900);
   };
 
@@ -122,7 +128,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
     setSaveToast('✕ Marked sample as rejected / false detection');
     setTimeout(() => {
       setSaveToast(null);
-      if (nextItem) onNavigateItem(nextItem);
+      if (nextPendingItem) onNavigateItem(nextPendingItem);
     }, 900);
   };
 
@@ -161,14 +167,15 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
 
   const timeSavedSeconds = Math.max(0, item.estimatedManualSec - (elapsedSec || item.aiAssistedSec));
 
-  // Drag-to-move state
+  // Drag state: move the whole box, or resize it from one corner
+  type DragMode = 'move' | 'nw' | 'ne' | 'sw' | 'se';
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{
     boxId: string;
+    mode: DragMode;
     startMouseX: number;
     startMouseY: number;
-    startBoxX: number;
-    startBoxY: number;
+    start: { x: number; y: number; width: number; height: number };
     moved: boolean;
   } | null>(null);
   const endDragRef = useRef<(() => void) | null>(null);
@@ -178,8 +185,39 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
 
   // Ignore pointer jitter below this distance (in % of the image) so a click doesn't count as an edit
   const DRAG_THRESHOLD_PCT = 0.5;
+  // Smallest box a resize can produce, in % of the image
+  const MIN_BOX_PCT = 2;
 
-  const handleBoxPointerDown = (e: React.PointerEvent, box: BoundingBox) => {
+  const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+
+  // New geometry for a box given the pointer offset (dx, dy) since the drag started
+  const applyDrag = (
+    mode: DragMode,
+    start: { x: number; y: number; width: number; height: number },
+    dx: number,
+    dy: number
+  ) => {
+    if (mode === 'move') {
+      return {
+        x: clamp(start.x + dx, 0, 100 - start.width),
+        y: clamp(start.y + dy, 0, 100 - start.height),
+        width: start.width,
+        height: start.height,
+      };
+    }
+    // Resize: the corner opposite the dragged handle stays fixed
+    let left = start.x;
+    let top = start.y;
+    let right = start.x + start.width;
+    let bottom = start.y + start.height;
+    if (mode === 'nw' || mode === 'sw') left = clamp(left + dx, 0, right - MIN_BOX_PCT);
+    if (mode === 'ne' || mode === 'se') right = clamp(right + dx, left + MIN_BOX_PCT, 100);
+    if (mode === 'nw' || mode === 'ne') top = clamp(top + dy, 0, bottom - MIN_BOX_PCT);
+    if (mode === 'sw' || mode === 'se') bottom = clamp(bottom + dy, top + MIN_BOX_PCT, 100);
+    return { x: left, y: top, width: right - left, height: bottom - top };
+  };
+
+  const handleBoxPointerDown = (e: React.PointerEvent, box: BoundingBox, mode: DragMode = 'move') => {
     e.preventDefault();
     e.stopPropagation();
     // Select the box on pointerdown so it's immediately active
@@ -192,10 +230,10 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
 
     dragState.current = {
       boxId: box.id,
+      mode,
       startMouseX: ((e.clientX - rect.left) / rect.width) * 100,
       startMouseY: ((e.clientY - rect.top) / rect.height) * 100,
-      startBoxX: box.x,
-      startBoxY: box.y,
+      start: { x: box.x, y: box.y, width: box.width, height: box.height },
       moved: false,
     };
 
@@ -208,16 +246,9 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
       if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD_PCT) return;
       drag.moved = true;
 
+      const geometry = applyDrag(drag.mode, drag.start, dx, dy);
       setBoxes((prev) =>
-        prev.map((b) => {
-          if (b.id !== drag.boxId) return b;
-          return {
-            ...b,
-            x: Math.min(Math.max(drag.startBoxX + dx, 0), 100 - b.width),
-            y: Math.min(Math.max(drag.startBoxY + dy, 0), 100 - b.height),
-            isHumanCorrected: true,
-          };
-        })
+        prev.map((b) => (b.id === drag.boxId ? { ...b, ...geometry, isHumanCorrected: true } : b))
       );
     };
 
@@ -318,7 +349,6 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
             {/* Interactive Bounding Boxes Overlay */}
             {boxes.map((box) => {
               const isSelected = box.id === selectedBoxId;
-              const classColor = CLASS_COLORS[box.label] || CLASS_COLORS.Building;
 
               return (
                 <div
@@ -337,7 +367,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
                       : box.confidence >= 0.80
                       ? 'border-blue-500 bg-blue-500/10'
                       : 'border-dashed border-red-500 bg-red-500/10'
-                  } ${isSelected ? 'ring-2 ring-gray-900 ring-offset-2 scale-[1.01]' : ''}`}
+                  } ${isSelected ? 'ring-2 ring-gray-900 ring-offset-2 z-10' : ''}`}
                 >
                   {/* Bounding Label Chip */}
                   <div
@@ -355,25 +385,34 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
                     </span>
                   </div>
 
-                  {/* Corner Resize Handles when Selected */}
-                  {isSelected && (
-                    <>
-                      <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-white border border-gray-900 shadow-sm"></div>
-                      <div className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-white border border-gray-900 shadow-sm"></div>
-                      <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 rounded-full bg-white border border-gray-900 shadow-sm"></div>
-                      <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 rounded-full bg-white border border-gray-900 shadow-sm"></div>
-                    </>
-                  )}
+                  {/* Corner resize handles when selected: drag one to resize, the opposite corner stays put */}
+                  {isSelected &&
+                    (
+                      [
+                        ['nw', '-top-2 -left-2 cursor-nwse-resize'],
+                        ['ne', '-top-2 -right-2 cursor-nesw-resize'],
+                        ['sw', '-bottom-2 -left-2 cursor-nesw-resize'],
+                        ['se', '-bottom-2 -right-2 cursor-nwse-resize'],
+                      ] as const
+                    ).map(([corner, pos]) => (
+                      <div
+                        key={corner}
+                        data-handle={corner}
+                        onPointerDown={(e) => handleBoxPointerDown(e, box, corner)}
+                        style={{ touchAction: 'none' }}
+                        className={`absolute ${pos} w-4 h-4 rounded-full bg-white border-2 border-gray-900 shadow-sm z-10`}
+                      ></div>
+                    ))}
                 </div>
               );
             })}
 
             {/* Quick Canvas Toolbar Overlay */}
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-              <div className="px-3 py-2 rounded-xl bg-white/95 text-[11px] font-mono text-gray-700 border border-gray-200 shadow-sm pointer-events-auto flex items-center gap-2 font-medium">
+              <div className="px-3 py-2 rounded-xl bg-white/95 text-[11px] font-mono text-gray-700 border border-gray-200 shadow-sm pointer-events-none flex items-center gap-2 font-medium">
                 <span>Box: {selectedBox ? `${selectedBox.label} (#${selectedBox.id})` : 'None'}</span>
                 <span className="text-gray-300">|</span>
-                <span className="text-gray-500">Drag or click handles to refine spatial coordinates</span>
+                <span className="text-gray-500">Drag a box to move it · drag a corner handle to resize</span>
               </div>
 
               <button
