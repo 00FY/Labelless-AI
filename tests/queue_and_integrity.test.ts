@@ -60,6 +60,22 @@ function runTests() {
     console.log('  [WARN] inputs/ranked_queue.json not found, skipping file load check.');
   }
 
+  // The Explain modal shows each term as weight x score; they must add up to the priority
+  const uiDatasetPath = path.resolve('public/ranked_dataset.json');
+  if (fs.existsSync(uiDatasetPath)) {
+    const uiItems: DatasetItem[] = JSON.parse(fs.readFileSync(uiDatasetPath, 'utf-8'));
+    const badContrib = uiItems.filter((i) => {
+      const e = i.explanation;
+      const termsMatch =
+        Math.abs(e.uncertaintyContribution - DEFAULT_WEIGHTS.w_uncertainty * i.uncertaintyScore) <= 0.006 &&
+        Math.abs(e.rareClassContribution - DEFAULT_WEIGHTS.w_rare_class * i.rareClassScore) <= 0.006 &&
+        Math.abs(e.diversityContribution - DEFAULT_WEIGHTS.w_diversity * i.diversityScore) <= 0.006;
+      const sum = e.uncertaintyContribution + e.rareClassContribution + e.diversityContribution;
+      return !termsMatch || Math.abs(sum - i.priorityScore) > 0.02;
+    });
+    assert(badContrib.length === 0, `Explain-modal contributions equal weight x score for all ${uiItems.length} UI items`, `found ${badContrib.length} mismatches`);
+  }
+
   // ── TEST 2: Queue Update Behavior (Accept, Correct, Reject)
   console.log('\n[2/4] Testing Queue Update Behavior (Accept/Correct/Reject)...');
   const mockItems: DatasetItem[] = [
