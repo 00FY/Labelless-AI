@@ -13041,7 +13041,7 @@
     "imageUrl": "/predictions/03db54200069482ff87cab702a6be150.png",
     "predictedClass": "Smoke",
     "confidence": 0.57,
-    "uncertaintyScore": 0.47,
+    "uncertaintyScore": 0.48,
     "diversityScore": 0.65,
     "rareClassScore": 0.8,
     "priorityScore": 0.5576,
@@ -13195,7 +13195,7 @@
       "rareClassContribution": 0.11,
       "recommendation": "Review suggested",
       "bulletPoints": [
-        "Model uncertainty: 63.3%",
+        "Model uncertainty: 63.2%",
         "Detected objects: 12",
         "Active learning reason: Low average model confidence (43.0%)"
       ]
@@ -47195,7 +47195,7 @@
     "priorityScore": 0.4575,
     "priorityLevel": "medium",
     "reasons": [
-      "Low average model confidence (59.8%)",
+      "Low average model confidence (59.9%)",
       "High scene complexity (5 bounding boxes)"
     ],
     "explanation": {
@@ -47206,7 +47206,7 @@
       "bulletPoints": [
         "Model uncertainty: 49.2%",
         "Detected objects: 5",
-        "Active learning reason: Low average model confidence (59.8%)"
+        "Active learning reason: Low average model confidence (59.9%)"
       ]
     },
     "status": "auto_labeled",

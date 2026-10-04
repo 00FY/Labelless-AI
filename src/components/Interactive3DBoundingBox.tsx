@@ -35,6 +35,9 @@ const SAMPLE_INSPECTION_IMAGES = [
   {
     id: 'sample_09e6',
     title: 'Damaged Structural Complex',
+    shortLabel: 'Structural Hazard',
+    badge: 'Uncertain · 66%',
+    badgeType: 'uncertain',
     imageUrl: '/predictions/09e62858a678e6fcea8bced21d03ab1c.png',
     predictedClass: 'Damaged Building',
     confidence: 0.66,
@@ -50,6 +53,9 @@ const SAMPLE_INSPECTION_IMAGES = [
   {
     id: 'sample_03db',
     title: 'Rubble & Mixed Debris Field',
+    shortLabel: 'Wildfire Hazard',
+    badge: 'Rare Class · 58%',
+    badgeType: 'rare',
     imageUrl: '/predictions/03db54200069482ff87cab702a6be150.png',
     predictedClass: 'Fire',
     confidence: 0.58,
@@ -65,6 +71,9 @@ const SAMPLE_INSPECTION_IMAGES = [
   {
     id: 'sample_00f2',
     title: 'Intact Residential Block',
+    shortLabel: 'Intact Block',
+    badge: 'Auto-Pass · 89%',
+    badgeType: 'auto',
     imageUrl: '/predictions/00f205aea57febc8e82d4e99a18b1d51.png',
     predictedClass: 'Undamaged Building',
     confidence: 0.89,
@@ -131,59 +140,73 @@ export const AIVisionInspector: React.FC<Props> = ({
   const isLowConfidence = currentSample.confidence < 0.85;
 
   return (
-    <div className={`p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5 ${className}`}>
+    <div className={`p-4 sm:p-5 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4 ${className}`}>
       {/* Header & Sample Switcher */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-200 pb-4">
-        <div>
+      <div className="space-y-2.5 border-b border-gray-200 pb-3">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-gray-900 text-white">
-              <Eye className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-gray-900 text-white shrink-0">
+              <Eye className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
-              AI Vision Inspector (2D YOLO Detections)
-            </h3>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gray-100 text-gray-600 border border-gray-200">
-              Real Dataset Inspector
-            </span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-gray-900 leading-tight">
+                AI Vision Inspector
+              </h3>
+              <p className="text-[10px] text-gray-500 font-mono">2D YOLO Detections & Uncertainty Heatmaps</p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Inspect real YOLO object predictions, model uncertainty heatmaps, and human-in-the-loop corrections.
-          </p>
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+            Real Inferences
+          </span>
         </div>
 
-        {/* Sample Selection Buttons */}
+        {/* Polished Sample Selection Cards */}
         {!propItem && (
-          <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl border border-gray-200">
-            {SAMPLE_INSPECTION_IMAGES.map((sample, idx) => (
-              <button
-                key={sample.id}
-                onClick={() => {
-                  setSelectedSampleIndex(idx);
-                  setWorkflowState('ai_prediction');
-                  setUserActionFeedback(null);
-                }}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all ${
-                  selectedSampleIndex === idx
-                    ? 'bg-white text-gray-900 shadow-sm font-bold'
-                    : 'text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                Sample {idx + 1}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-1.5 bg-gray-100 p-1.5 rounded-xl border border-gray-200 w-full">
+            {SAMPLE_INSPECTION_IMAGES.map((sample, idx) => {
+              const isSelected = selectedSampleIndex === idx;
+              return (
+                <button
+                  key={sample.id}
+                  onClick={() => {
+                    setSelectedSampleIndex(idx);
+                    setWorkflowState('ai_prediction');
+                    setUserActionFeedback(null);
+                  }}
+                  className={`py-1.5 px-2 rounded-lg text-left transition-all flex flex-col justify-center ${
+                    isSelected
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200 font-bold'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+                  }`}
+                >
+                  <span className="text-[11px] truncate leading-tight font-semibold">{sample.shortLabel}</span>
+                  <span
+                    className={`text-[9px] font-mono leading-tight mt-0.5 font-bold ${
+                      sample.badgeType === 'rare'
+                        ? 'text-red-600'
+                        : sample.badgeType === 'uncertain'
+                        ? 'text-amber-600'
+                        : 'text-emerald-600'
+                    }`}
+                  >
+                    {sample.badge}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Mode Overlay Tab Bar */}
-      <div className="flex items-center justify-between gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-200 text-xs">
-        <span className="text-gray-400 font-bold uppercase text-[10px] px-2">Visual Layer:</span>
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 bg-gray-50 p-1.5 rounded-xl border border-gray-200 text-xs">
+        <span className="text-gray-400 font-bold uppercase text-[10px] px-1 shrink-0">Visual Layer:</span>
+        <div className="flex flex-wrap items-center gap-1">
           {(['prediction', 'uncertainty', 'rarity', 'diversity'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setActiveOverlayTab(mode)}
-              className={`px-3 py-1.5 rounded-lg font-bold capitalize transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize transition-all ${
                 activeOverlayTab === mode
                   ? 'bg-gray-900 text-white shadow-sm'
                   : 'text-gray-600 hover:bg-gray-200'
@@ -331,135 +354,36 @@ export const AIVisionInspector: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* AI → Human → Retraining Workflow Stage Bar */}
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-500">
-          <span>Active Learning Workflow Step:</span>
-          <span className="font-mono text-gray-900 capitalize">{workflowState.replace(/_/g, ' ')}</span>
-        </div>
 
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          {/* Step 1 */}
-          <div
-            className={`p-2.5 rounded-lg border flex items-center gap-2 font-medium transition-all ${
-              workflowState === 'ai_prediction'
-                ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold'
-                : 'bg-white border-gray-200 text-gray-600'
-            }`}
-          >
-            <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-mono font-bold text-[11px]">
-              1
-            </div>
-            <div>
-              <div className="font-bold">AI Prediction</div>
-              <div className="text-[10px] text-gray-500">YOLOv8 Output</div>
-            </div>
-          </div>
 
-          {/* Step 2 */}
-          <div
-            className={`p-2.5 rounded-lg border flex items-center gap-2 font-medium transition-all ${
-              workflowState === 'human_correction'
-                ? 'bg-sky-50 border-sky-300 text-sky-900 font-bold'
-                : 'bg-white border-gray-200 text-gray-600'
-            }`}
-          >
-            <div className="w-5 h-5 rounded-full bg-sky-200 text-sky-800 flex items-center justify-center font-mono font-bold text-[11px]">
-              2
-            </div>
-            <div>
-              <div className="font-bold">Human Correction</div>
-              <div className="text-[10px] text-gray-500">Annotator Review</div>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div
-            className={`p-2.5 rounded-lg border flex items-center gap-2 font-medium transition-all ${
-              workflowState === 'added_to_retrain'
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
-                : 'bg-white border-gray-200 text-gray-600'
-            }`}
-          >
-            <div className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-mono font-bold text-[11px]">
-              3
-            </div>
-            <div>
-              <div className="font-bold">Retraining Data</div>
-              <div className="text-[10px] text-gray-500">Round 2 Training Set</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Priority Score Breakdown Progress Bars */}
-      <div className="space-y-2 p-4 rounded-xl bg-gray-50 border border-gray-200">
-        <div className="flex items-center justify-between text-xs font-bold text-gray-900">
-          <span>Priority Triage Score:</span>
-          <span className="font-mono text-amber-600">{currentSample.priorityScore.toFixed(2)}</span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 text-xs font-medium">
-          <div>
-            <div className="flex justify-between text-[11px] mb-1">
-              <span className="text-gray-500">Uncertainty</span>
-              <span className="font-mono font-bold text-amber-600">{(currentSample.uncertainty * 100).toFixed(0)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-amber-500 rounded-full" style={{ width: `${currentSample.uncertainty * 100}%` }} />
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between text-[11px] mb-1">
-              <span className="text-gray-500">Class Rarity</span>
-              <span className="font-mono font-bold text-purple-600">{(currentSample.rarity * 100).toFixed(0)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-purple-500 rounded-full" style={{ width: `${currentSample.rarity * 100}%` }} />
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between text-[11px] mb-1">
-              <span className="text-gray-500">Diversity</span>
-              <span className="font-mono font-bold text-sky-600">{(currentSample.diversity * 100).toFixed(0)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-sky-500 rounded-full" style={{ width: `${currentSample.diversity * 100}%` }} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Human Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+      {/* Human Action Buttons - Strict 3-column grid: 100% inside container, no overflow */}
+      <div className="w-full pt-1 space-y-2">
+        <div className="grid grid-cols-3 gap-2 w-full">
           <button
             onClick={() => handleUserAction('accept')}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
+            className="w-full py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
           >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>[ ACCEPT ]</span>
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>Accept</span>
           </button>
           <button
             onClick={() => handleUserAction('correct')}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
+            className="w-full py-2.5 px-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
           >
-            <Edit3 className="w-4 h-4" />
-            <span>[ CORRECT ]</span>
+            <Edit3 className="w-4 h-4 shrink-0" />
+            <span>Correct</span>
           </button>
           <button
             onClick={() => handleUserAction('reject')}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
+            className="w-full py-2.5 px-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
           >
-            <XCircle className="w-4 h-4" />
-            <span>[ REJECT ]</span>
+            <XCircle className="w-4 h-4 shrink-0" />
+            <span>Reject</span>
           </button>
         </div>
 
         {userActionFeedback && (
-          <div className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 flex items-center gap-2 w-full sm:w-auto">
+          <div className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 flex items-center gap-2 w-full animate-in fade-in">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             <span className="truncate">{userActionFeedback}</span>
           </div>

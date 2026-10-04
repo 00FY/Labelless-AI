@@ -178,12 +178,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-emerald-600" />
               <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
-                Where is Human Effort Going? (Effort Allocation)
+                Effort Allocation
               </h3>
             </div>
-            <p className="text-xs text-gray-500">
-              Visual proof that LabelLess AI handles the majority of the pipeline automatically
-            </p>
           </div>
 
           <span className="text-xs font-mono font-bold text-gray-600 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200">
@@ -220,32 +217,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           {/* Legend Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
-              <div className="w-3.5 h-3.5 rounded-md bg-emerald-100 border border-emerald-200 shrink-0"></div>
+              <div className="w-3 h-3 rounded-md bg-emerald-500 shrink-0"></div>
               <div>
                 <div className="text-xs font-bold text-gray-900">
-                  {autoPct}% Auto-labelled ({autoLabeled.toLocaleString()} imgs)
+                  {autoPct}% Auto-labelled
                 </div>
-                <div className="text-[11px] text-gray-500">Zero human intervention needed</div>
+                <div className="text-[11px] font-mono text-gray-500">{autoLabeled.toLocaleString()} confident images</div>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
-              <div className="w-3.5 h-3.5 rounded-md bg-gray-200 border border-gray-300 shrink-0"></div>
+              <div className="w-3 h-3 rounded-md bg-gray-400 shrink-0"></div>
               <div>
                 <div className="text-xs font-bold text-gray-900">
-                  {humanPct}% Human-reviewed ({humanReviewed.toLocaleString()} imgs)
+                  {humanPct}% Human-reviewed
                 </div>
-                <div className="text-[11px] text-gray-500">High gradient active retraining data</div>
+                <div className="text-[11px] font-mono text-gray-500">{humanReviewed.toLocaleString()} active retrain samples</div>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
-              <div className="w-3.5 h-3.5 rounded-md bg-red-100 border border-red-200 shrink-0"></div>
+              <div className="w-3 h-3 rounded-md bg-rose-500 shrink-0"></div>
               <div>
                 <div className="text-xs font-bold text-gray-900">
-                  {pendingPct}% Pending Queue ({pendingReview.toLocaleString()} imgs)
+                  {pendingPct}% Pending Queue
                 </div>
-                <div className="text-[11px] text-gray-500">Ranked by expected model gain</div>
+                <div className="text-[11px] font-mono text-gray-500">{pendingReview.toLocaleString()} remaining in queue</div>
               </div>
             </div>
           </div>
@@ -273,16 +270,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-gray-400" />
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-900">
-                  Model Improvement Across Active-Learning Rounds
+                  Model Improvement Trajectory
                 </h3>
               </div>
-              <span className="text-xs font-bold font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                +27.5% Active Learning Gain (60.9% → 88.4%)
+              <span className="text-xs font-bold font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                +27.5% mAP Gain (60.9% → 88.4%)
               </span>
             </div>
-            <p className="text-xs text-gray-500">
-              Proves that human feedback on prioritized uncertain samples rapidly elevates YOLOv8 accuracy.
-            </p>
           </div>
 
           {/* Interactive Chart Visual */}
@@ -389,73 +383,42 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </p>
           </div>
 
-          {/* Functional 3D Spatial Bounding Box Inspector */}
-          <Interactive3DBoundingBox className="w-full" />
+          {/* Functional 2D Spatial YOLO Bounding Box Inspector */}
+          <Interactive3DBoundingBox className="w-full !p-0 !border-0 !shadow-none bg-transparent" />
 
-          {/* Breakdown visualization */}
-          <div className="space-y-3.5 p-4 rounded-xl bg-gray-50 border border-gray-200">
-            {/* Factor 1: Uncertainty */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                  Model Uncertainty (High Entropy)
-                </span>
-                <span className="font-mono font-bold text-gray-900">{uncPct}%</span>
-              </div>
-              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${uncPct}%` }}></div>
-              </div>
+          {/* Triage factors breakdown (Compact 2x2 grid) */}
+          <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-gray-50 border border-gray-200">
+            <div className="p-2.5 rounded-lg bg-white border border-gray-200 flex items-center justify-between shadow-2xs">
+              <span className="flex items-center gap-1.5 text-xs text-gray-700 font-medium">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                Uncertainty
+              </span>
+              <span className="font-mono font-bold text-xs text-amber-600">{uncPct}%</span>
             </div>
 
-            {/* Factor 2: Rare Class */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
-                  <Flame className="w-3.5 h-3.5 text-red-500" />
-                  Rare Class (Fire, Debris)
-                </span>
-                <span className="font-mono font-bold text-gray-900">{rarePct}%</span>
-              </div>
-              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-red-400 rounded-full transition-all duration-500" style={{ width: `${rarePct}%` }}></div>
-              </div>
+            <div className="p-2.5 rounded-lg bg-white border border-gray-200 flex items-center justify-between shadow-2xs">
+              <span className="flex items-center gap-1.5 text-xs text-gray-700 font-medium">
+                <Flame className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                Rare Class
+              </span>
+              <span className="font-mono font-bold text-xs text-red-600">{rarePct}%</span>
             </div>
 
-            {/* Factor 3: Novel/Diverse Image */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
-                  <Layers className="w-3.5 h-3.5 text-blue-500" />
-                  Novel / Outlier Embedding
-                </span>
-                <span className="font-mono font-bold text-gray-900">{divPct}%</span>
-              </div>
-              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-400 rounded-full transition-all duration-500" style={{ width: `${divPct}%` }}></div>
-              </div>
+            <div className="p-2.5 rounded-lg bg-white border border-gray-200 flex items-center justify-between shadow-2xs">
+              <span className="flex items-center gap-1.5 text-xs text-gray-700 font-medium">
+                <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                Outlier Vector
+              </span>
+              <span className="font-mono font-bold text-xs text-blue-600">{divPct}%</span>
             </div>
 
-            {/* Factor 4: Other */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-700 font-semibold">
-                  <Info className="w-3.5 h-3.5 text-gray-400" />
-                  Boundary Jitter / Clustered Boxes
-                </span>
-                <span className="font-mono font-bold text-gray-900">{otherPct}%</span>
-              </div>
-              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gray-400 rounded-full transition-all duration-500" style={{ width: `${otherPct}%` }}></div>
-              </div>
+            <div className="p-2.5 rounded-lg bg-white border border-gray-200 flex items-center justify-between shadow-2xs">
+              <span className="flex items-center gap-1.5 text-xs text-gray-700 font-medium">
+                <Info className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                Boundary Jitter
+              </span>
+              <span className="font-mono font-bold text-xs text-gray-600">{otherPct}%</span>
             </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-gray-100 border border-gray-200 text-xs text-gray-600 flex items-start gap-2">
-            <Sparkles className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
-            <span>
-              <strong>Active Learning Gain:</strong> Reviewing these specific images provides 3.8x faster convergence than random verification.
-            </span>
           </div>
         </section>
       </div>

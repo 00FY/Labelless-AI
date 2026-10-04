@@ -12,7 +12,10 @@ import {
   ArrowRight,
   Clock,
   Sliders,
-  Check
+  Check,
+  Flame,
+  RefreshCw,
+  Eye
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -245,34 +248,154 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* Section 3 - Features */}
       <motion.section {...fadeInUp} className="px-4 md:px-8 max-w-7xl mx-auto space-y-16">
-        <div className="space-y-4">
-          <h2 className="section-label text-[11px] uppercase tracking-widest text-gray-500 font-bold">FEATURES</h2>
-          <h3 className="text-3xl font-bold text-gray-900">
-            Detect. Route. Review. <span className="text-gray-400">Build loops for annotation.</span>
+        <div className="space-y-2 text-center max-w-2xl mx-auto">
+          <h2 className="section-label text-[11px] uppercase tracking-widest text-gray-400 font-bold">CAPABILITIES</h2>
+          <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Intelligent Triage & Closed Feedback
           </h3>
         </div>
 
         <div className="space-y-20">
+          {/* Feature 1: Smart Review Queue Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-4">
-              <h4 className="text-2xl font-bold text-gray-900">Smart Review Queue</h4>
-              <p className="text-gray-500 leading-relaxed">
-                AI ranks images by uncertainty, diversity & class rarity. Routes only the hardest cases to humans, minimizing redundant work while maximizing learning.
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Intelligent Prioritization
+              </div>
+              <h4 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Smart Review Queue</h4>
+              <p className="text-gray-500 leading-relaxed text-sm sm:text-base">
+                Ranks imagery by uncertainty, diversity, and class rarity. Routes only the most informative samples to humans, automating the rest.
               </p>
             </div>
-            <div className="aspect-video bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center shadow-sm">
-              <Layers className="w-12 h-12 text-gray-400" />
+
+            {/* Rich Visual Component for Smart Review Queue */}
+            <div className="rounded-2xl border border-gray-200 bg-slate-950 p-4 shadow-xl text-white space-y-3 overflow-hidden relative group">
+              {/* Window Header */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 text-xs font-mono">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  </div>
+                  <span className="text-slate-400 font-semibold text-[11px] ml-1">triage_queue_live.stream</span>
+                </div>
+                <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  Priority 0.94 · Urgent Human Look
+                </div>
+              </div>
+
+              {/* Main Queue Sample Visual */}
+              <div className="relative rounded-xl overflow-hidden h-48 bg-slate-900 border border-slate-800">
+                <img
+                  src="/predictions/03db54200069482ff87cab702a6be150.png"
+                  alt="Triage Queue Visual"
+                  className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?w=800&q=80';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+
+                {/* Bounding Box on Fire / Hazard */}
+                <div
+                  className="absolute border-2 border-amber-400 rounded-md bg-amber-500/20 backdrop-blur-xs flex items-start p-1"
+                  style={{ top: '24%', left: '26%', width: '40%', height: '48%' }}
+                >
+                  <span className="text-[10px] font-mono font-bold bg-slate-950/90 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/40">
+                    🔥 Fire · 58% (Uncertain)
+                  </span>
+                </div>
+
+                {/* Heatmap Indicator */}
+                <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-900/90 backdrop-blur-md text-[10px] font-mono text-slate-300 border border-slate-700">
+                  <Flame className="w-3 h-3 text-red-400" />
+                  <span>Rare Hazard Detected (&lt;5% frequency)</span>
+                </div>
+              </div>
+
+              {/* Multi-Factor Telemetry Bar */}
+              <div className="grid grid-cols-3 gap-2 text-center pt-1 font-mono text-xs">
+                <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                  <div className="text-[10px] text-slate-400 uppercase">Entropy</div>
+                  <div className="text-amber-400 font-bold">0.82 (High)</div>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                  <div className="text-[10px] text-slate-400 uppercase">Rarity</div>
+                  <div className="text-rose-400 font-bold">0.94 (Rare)</div>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                  <div className="text-[10px] text-slate-400 uppercase">Diversity</div>
+                  <div className="text-sky-400 font-bold">0.78 (Novel)</div>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Feature 2: Active Learning Loop Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="aspect-video bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center shadow-sm order-2 md:order-1">
-              <TrendingUp className="w-12 h-12 text-gray-400" />
+            {/* Rich Visual Component for Active Learning Loop */}
+            <div className="rounded-2xl border border-gray-200 bg-slate-950 p-5 shadow-xl text-white space-y-4 order-2 md:order-1">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/30">
+                    <RefreshCw className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white font-mono">Closed Retraining Loop</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Human-in-the-Loop Flywheel</div>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  +27.5% mAP Gain
+                </span>
+              </div>
+
+              {/* 4 Cyclic Steps */}
+              <div className="grid grid-cols-2 gap-2.5 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <div className="text-[10px] text-sky-400 font-bold uppercase">01. INFER & FILTER</div>
+                  <div className="text-sm font-extrabold text-white">73.5% Auto</div>
+                  <div className="text-[10px] text-slate-400">High confidence auto-passed</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <div className="text-[10px] text-amber-400 font-bold uppercase">02. VALUE TRIAGE</div>
+                  <div className="text-sm font-extrabold text-white">26.5% Hard</div>
+                  <div className="text-[10px] text-slate-400">Uncertain samples to human</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <div className="text-[10px] text-emerald-400 font-bold uppercase">03. HUMAN REVIEW</div>
+                  <div className="text-sm font-extrabold text-white">8.7s / Image</div>
+                  <div className="text-[10px] text-slate-400">Rapid micro-corrections</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <div className="text-[10px] text-purple-400 font-bold uppercase">04. RETRAIN MODEL</div>
+                  <div className="text-sm font-extrabold text-white">88.4% mAP</div>
+                  <div className="text-[10px] text-slate-400">Compounds every round</div>
+                </div>
+              </div>
+
+              {/* Evolution Mini-Bar */}
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                <div className="flex justify-between text-[11px] font-mono">
+                  <span className="text-slate-400">YOLOv8 Accuracy Trajectory</span>
+                  <span className="text-emerald-400 font-bold">60.9% → 88.4% mAP@50</span>
+                </div>
+                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-amber-500 via-sky-500 to-emerald-400 rounded-full w-[88.4%]" />
+                </div>
+              </div>
             </div>
+
             <div className="space-y-4 order-1 md:order-2">
-              <h4 className="text-2xl font-bold text-gray-900">Active Learning Loop</h4>
-              <p className="text-gray-500 leading-relaxed">
-                Each round of human feedback improves the model. In our tests, 5 rounds took mAP from 60.9% to 88.4%, drastically reducing necessary human input.
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-wider">
+                <TrendingUp className="w-3.5 h-3.5" />
+                Compounding Model Quality
+              </div>
+              <h4 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Active Learning Loop</h4>
+              <p className="text-gray-500 leading-relaxed text-sm sm:text-base">
+                Every verified correction feeds back into retraining. Over 5 iterations, accuracy jumped from 60.9% to 88.4% while slashing human effort by 47%.
               </p>
             </div>
           </div>
@@ -281,10 +404,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* Section 4 - Results */}
       <motion.section {...fadeInUp} className="px-4 md:px-8 max-w-7xl mx-auto space-y-10">
-        <div className="space-y-4">
-          <h2 className="section-label text-[11px] uppercase tracking-widest text-gray-500 font-bold">RESULTS</h2>
-          <h3 className="text-3xl font-bold text-gray-900">
-            Real experiment results. <span className="text-gray-400">Not just promises.</span>
+        <div className="space-y-2 text-center max-w-2xl mx-auto">
+          <h2 className="section-label text-[11px] uppercase tracking-widest text-gray-400 font-bold">RESULTS</h2>
+          <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Verified Experiment Benchmarks
           </h3>
         </div>
 

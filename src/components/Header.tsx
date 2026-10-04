@@ -17,47 +17,13 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDemoTour,
   isLiveBackend = false,
 }) => {
-  const getBackendStatusBadge = () => {
-    if (isLiveBackend) {
-      return (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold" title="Connected to FastAPI Server on :8000">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>● FASTAPI LIVE</span>
-        </div>
-      );
-    }
+  const getStatusBadge = () => {
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold" title="Running in static offline replay mode. Start 'python -m uvicorn server:app' for live backend.">
-        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-        <span>○ OFFLINE REPLAY MODE</span>
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-mono font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Round {config.currentRound} · {isLiveBackend ? 'FastAPI Live' : 'Active'}</span>
       </div>
     );
-  };
-
-  const getStatusBadge = () => {
-    switch (config.pipelineStatus) {
-      case 'processing':
-        return (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-            <span>Processing</span>
-          </div>
-        );
-      case 'round_complete':
-        return (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span>✓ ROUND {config.currentRound} COMPLETE</span>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-            <span>Pipeline Active</span>
-          </div>
-        );
-    }
   };
 
   const navLinks = [
@@ -110,16 +76,15 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Actions: Status & Judge Tour CTA */}
-        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-          <div className="hidden md:flex items-center gap-2">
-            {getBackendStatusBadge()}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          <div className="hidden md:flex items-center">
             {getStatusBadge()}
           </div>
 
           <button
             id="judge-demo-tour-btn"
             onClick={onOpenDemoTour}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-700 rounded-xl transition-colors shadow-sm"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-700 rounded-xl transition-colors shadow-sm"
           >
             <PlayCircle className="w-4 h-4" />
             <span>View Demo</span>
