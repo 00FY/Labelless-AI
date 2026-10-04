@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { DatasetItem, BoundingBox, FeedbackCategory, NavigationTab } from '../types';
+import { getPipelineConfig } from '../data/pipelineConfig';
 import { CLASS_COLORS } from '../data/fallbackPresets';
 import {
   Check,
@@ -41,7 +42,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
 }) => {
   const [boxes, setBoxes] = useState<BoundingBox[]>(item.boxes);
   const [selectedBoxId, setSelectedBoxId] = useState<string>(item.boxes[0]?.id || '');
-  const [activeClass, setActiveClass] = useState<string>(item.predictedClass || 'Building');
+  const [activeClass, setActiveClass] = useState<string>(item.predictedClass || getPipelineConfig().classes[0].display_name);
   const [feedbackCategory, setFeedbackCategory] = useState<FeedbackCategory | undefined>(
     item.feedbackCategory
   );
@@ -458,11 +459,11 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
                 onChange={(e) => handleUpdateBoxLabel(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 font-semibold focus:outline-none focus:border-gray-300 transition-colors shadow-sm"
               >
-                <option value="Building">Building</option>
-                <option value="Vehicle">Vehicle</option>
-                <option value="Person">Person</option>
-                <option value="Fire">Fire</option>
-                <option value="Debris">Debris</option>
+                {getPipelineConfig().classes.map((c) => (
+                  <option key={c.id} value={c.display_name}>
+                    {c.display_name}
+                  </option>
+                ))}
               </select>
             </div>
 
