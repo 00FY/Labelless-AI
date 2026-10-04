@@ -49,7 +49,9 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
         return true;
       })
       .map((item) => {
-        const action = item.status === 'rejected' ? 'reject' : item.status === 'human_reviewed' ? 'correct' : 'accept';
+        // A human-reviewed item is a correction only if a box was edited; otherwise the AI labels were accepted
+        const edited = item.boxes.some((b) => b.isHumanCorrected);
+        const action = item.status === 'rejected' ? 'reject' : item.status === 'human_reviewed' && edited ? 'correct' : 'accept';
         return {
           image_id: item.filename || `${item.id}.png`,
           action: action,

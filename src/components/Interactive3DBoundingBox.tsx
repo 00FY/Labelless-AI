@@ -289,18 +289,10 @@ export const AIVisionInspector: React.FC<Props> = ({
                 />
 
                 {/* Cyberpunk Tech Corner Brackets */}
-                <path
-                  d={`M ${box.x}% ${box.y + 4}% V ${box.y}% H ${box.x + 5}%`}
-                  stroke="#FFFFFF"
-                  strokeWidth="3"
-                  fill="none"
-                />
-                <path
-                  d={`M ${box.x + box.width - 5}% ${box.y}% H ${box.x + box.width}% V ${box.y + 4}%`}
-                  stroke="#FFFFFF"
-                  strokeWidth="3"
-                  fill="none"
-                />
+                <line x1={`${box.x}%`} y1={`${box.y + 4}%`} x2={`${box.x}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                <line x1={`${box.x}%`} y1={`${box.y}%`} x2={`${box.x + 5}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                <line x1={`${box.x + box.width - 5}%`} y1={`${box.y}%`} x2={`${box.x + box.width}%`} y2={`${box.y}%`} stroke="#FFFFFF" strokeWidth="3" />
+                <line x1={`${box.x + box.width}%`} y1={`${box.y}%`} x2={`${box.x + box.width}%`} y2={`${box.y + 4}%`} stroke="#FFFFFF" strokeWidth="3" />
               </g>
             );
           })}

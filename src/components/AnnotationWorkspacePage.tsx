@@ -53,7 +53,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
   useEffect(() => {
     setBoxes(item.boxes);
     setSelectedBoxId(item.boxes[0]?.id || '');
-    setActiveClass(item.predictedClass || 'Building');
+    setActiveClass(item.predictedClass || getPipelineConfig().classes[0].display_name);
     setFeedbackCategory(item.feedbackCategory);
     setElapsedSec(0);
   }, [item.id]);
@@ -74,10 +74,14 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
   const nextItem = currentIndex < datasetItems.length - 1 ? datasetItems[currentIndex + 1] : null;
 
   // Actions
+  // Accept confirms the AI's boxes unchanged; edited boxes must go through Save Correction
+  const hasEdits = JSON.stringify(boxes) !== JSON.stringify(item.boxes);
+
   const handleAcceptAI = () => {
+    if (hasEdits) return;
     const updated: DatasetItem = {
       ...item,
-      status: 'auto_labeled',
+      status: 'human_reviewed',
       aiAssistedSec: elapsedSec || item.aiAssistedSec,
     };
     onUpdateItem(updated);
@@ -165,12 +169,20 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
     startMouseY: number;
     startBoxX: number;
     startBoxY: number;
+    moved: boolean;
   } | null>(null);
+  const endDragRef = useRef<(() => void) | null>(null);
 
-  const handleBoxMouseDown = (e: React.MouseEvent, box: BoundingBox) => {
+  // Drop window listeners if the workspace switches image or unmounts mid-drag
+  useEffect(() => () => endDragRef.current?.(), [item.id]);
+
+  // Ignore pointer jitter below this distance (in % of the image) so a click doesn't count as an edit
+  const DRAG_THRESHOLD_PCT = 0.5;
+
+  const handleBoxPointerDown = (e: React.PointerEvent, box: BoundingBox) => {
     e.preventDefault();
     e.stopPropagation();
-    // Select the box on mousedown so it's immediately active
+    // Select the box on pointerdown so it's immediately active
     setSelectedBoxId(box.id);
     setActiveClass(box.label);
 
@@ -184,37 +196,43 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
       startMouseY: ((e.clientY - rect.top) / rect.height) * 100,
       startBoxX: box.x,
       startBoxY: box.y,
+      moved: false,
     };
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      if (!dragState.current || !canvas) return;
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      const drag = dragState.current;
+      if (!drag || !canvas) return;
       const r = canvas.getBoundingClientRect();
-      const currentX = ((moveEvent.clientX - r.left) / r.width) * 100;
-      const currentY = ((moveEvent.clientY - r.top) / r.height) * 100;
-      const dx = currentX - dragState.current.startMouseX;
-      const dy = currentY - dragState.current.startMouseY;
+      const dx = ((moveEvent.clientX - r.left) / r.width) * 100 - drag.startMouseX;
+      const dy = ((moveEvent.clientY - r.top) / r.height) * 100 - drag.startMouseY;
+      if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD_PCT) return;
+      drag.moved = true;
 
       setBoxes((prev) =>
         prev.map((b) => {
-          if (b.id !== dragState.current!.boxId) return b;
+          if (b.id !== drag.boxId) return b;
           return {
             ...b,
-            x: Math.min(Math.max(dragState.current!.startBoxX + dx, 0), 100 - b.width),
-            y: Math.min(Math.max(dragState.current!.startBoxY + dy, 0), 100 - b.height),
+            x: Math.min(Math.max(drag.startBoxX + dx, 0), 100 - b.width),
+            y: Math.min(Math.max(drag.startBoxY + dy, 0), 100 - b.height),
             isHumanCorrected: true,
           };
         })
       );
     };
 
-    const onMouseUp = () => {
+    const endDrag = () => {
       dragState.current = null;
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      endDragRef.current = null;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
     };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    endDragRef.current = endDrag;
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
   };
 
   return (
@@ -305,12 +323,13 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
               return (
                 <div
                   key={box.id}
-                  onMouseDown={(e) => handleBoxMouseDown(e, box)}
+                  onPointerDown={(e) => handleBoxPointerDown(e, box)}
                   style={{
                     left: `${box.x}%`,
                     top: `${box.y}%`,
                     width: `${box.width}%`,
                     height: `${box.height}%`,
+                    touchAction: 'none',
                   }}
                   className={`absolute cursor-move transition-[border,box-shadow,opacity] border-2 rounded-md ${
                     box.isHumanCorrected
@@ -571,7 +590,9 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
           <button
             id="workspace-accept-btn"
             onClick={handleAcceptAI}
-            className="px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-gray-900 hover:bg-gray-700 shadow-sm transition-all flex items-center gap-1.5"
+            disabled={hasEdits}
+            title={hasEdits ? 'You edited the boxes. Use Save Correction to keep your changes.' : undefined}
+            className="px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-gray-900 hover:bg-gray-700 shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check className="w-4 h-4" />
             <span>✓ ACCEPT AI LABELS</span>
