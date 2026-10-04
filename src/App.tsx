@@ -126,6 +126,7 @@ export const App: React.FC = () => {
           setActiveTab={setActiveTab}
           pendingReviewCount={datasetItems.filter((i) => i.status === 'pending').length}
           rounds={rounds}
+          datasetItems={datasetItems}
         />
 
         {/* Dynamic Page Content Stage */}
@@ -167,6 +168,7 @@ export const App: React.FC = () => {
                 onStartAnnotation={() => setActiveTab('upload')}
                 onViewDemoDataset={() => setActiveTab('dashboard')}
                 setActiveTab={setActiveTab}
+                datasetItems={datasetItems}
               />
             )}
 
@@ -217,6 +219,7 @@ export const App: React.FC = () => {
             {!isLoading && (activeTab === 'evolution' || activeTab === 'model_improvement' || activeTab === 'retrain') && (
               <EvolutionImpactPage
                 rounds={rounds}
+                datasetItems={datasetItems}
                 setActiveTab={setActiveTab}
               />
             )}

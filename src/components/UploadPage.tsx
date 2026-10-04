@@ -370,7 +370,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-700 font-semibold">Diversity (Embedding Distance)</span>
+                  <span className="text-gray-700 font-semibold">Diversity (Scene Complexity)</span>
                   <span className="font-mono text-gray-600">{(config.diversityWeight * 100).toFixed(0)}%</span>
                 </div>
                 <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">

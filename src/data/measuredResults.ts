@@ -3,7 +3,7 @@
  *
  * Accuracy values are copied from public/experiment_results.json, which
  * scripts/export_experiment_results.py builds from results/metrics/*.json.
- * Routing counts come from public/ranked_dataset.json.
+ * Routing counts are computed from the loaded queue (getPoolRouting).
  * tests/queue_and_integrity.test.ts fails if these drift from those files.
  *
  * Do not add projected or simulated numbers here.
@@ -30,12 +30,31 @@ export const MEASURED_RUNS: MeasuredRun[] = [
 export const getRun = (method: MeasuredRun['method']): MeasuredRun =>
   MEASURED_RUNS.find((r) => r.method === method)!;
 
-// Routing of the 971-image unlabelled pool by the priority threshold (0.58).
-export const POOL_ROUTING = {
-  poolImages: 971,
-  autoLabeled: 716,
-  sentToHuman: 255,
-};
+export interface PoolRouting {
+  poolImages: number;
+  autoLabeled: number;
+  sentToHuman: number;
+  autoFraction: number;
+  humanFraction: number;
+}
+
+/**
+ * How the loaded pool was routed by the priority threshold (0.58). Counted from the
+ * queue actually loaded, because run_pipeline.py regenerates it on every start_dev launch.
+ * Anything not auto-labelled went (or is going) to a human.
+ */
+export function getPoolRouting(items: { status: string }[]): PoolRouting {
+  const poolImages = items.length;
+  const autoLabeled = items.filter((i) => i.status === 'auto_labeled').length;
+  const sentToHuman = poolImages - autoLabeled;
+  return {
+    poolImages,
+    autoLabeled,
+    sentToHuman,
+    autoFraction: poolImages ? autoLabeled / poolImages : 0,
+    humanFraction: poolImages ? sentToHuman / poolImages : 0,
+  };
+}
 
 export const pct = (fraction: number, digits = 1) => `${(fraction * 100).toFixed(digits)}%`;
 
@@ -44,6 +63,3 @@ export const pts = (to: number, from: number, digits = 1) => {
   const d = (to - from) * 100;
   return `${d >= 0 ? '+' : ''}${d.toFixed(digits)} pts`;
 };
-
-export const AUTO_ROUTED_FRACTION = POOL_ROUTING.autoLabeled / POOL_ROUTING.poolImages;
-export const HUMAN_ROUTED_FRACTION = POOL_ROUTING.sentToHuman / POOL_ROUTING.poolImages;

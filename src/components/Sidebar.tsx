@@ -1,6 +1,6 @@
 import React from 'react';
-import { NavigationTab, ActiveLearningRound } from '../types';
-import { HUMAN_ROUTED_FRACTION, getRun, pct } from '../data/measuredResults';
+import { NavigationTab, ActiveLearningRound, DatasetItem } from '../types';
+import { getPoolRouting, getRun, pct } from '../data/measuredResults';
 import {
   LayoutDashboard,
   UploadCloud,
@@ -19,6 +19,7 @@ interface SidebarProps {
   setActiveTab: (tab: NavigationTab) => void;
   pendingReviewCount: number;
   rounds?: ActiveLearningRound[];
+  datasetItems: DatasetItem[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -26,7 +27,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   pendingReviewCount,
   rounds,
+  datasetItems,
 }) => {
+  const routing = getPoolRouting(datasetItems);
   const latestRound = rounds && rounds.length > 0 ? rounds[rounds.length - 1] : null;
   const currentMap = latestRound ? `${latestRound.mAP50}%` : pct(getRun('labelless').mAP50);
   const sections = [
@@ -124,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-[11px]">Sent to Humans</span>
-            <span className="font-bold text-emerald-600">{pct(HUMAN_ROUTED_FRACTION)}</span>
+            <span className="font-bold text-emerald-600">{pct(routing.humanFraction)}</span>
           </div>
         </div>
       </div>

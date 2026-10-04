@@ -450,12 +450,12 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
 
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 font-medium">
                   <Tag className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                  <span>Rare Class / Feature Imbalance Weight</span>
+                  <span>Rare-class boost (+{item.explanation.rareClassContribution.toFixed(2)})</span>
                 </div>
 
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 font-medium">
                   <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  <span>Novel embedding anomaly (+{item.explanation.diversityContribution.toFixed(2)})</span>
+                  <span>Scene diversity (+{item.explanation.diversityContribution.toFixed(2)})</span>
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { ActiveLearningRound, NavigationTab } from '../types';
-import { MEASURED_RUNS, POOL_ROUTING, HUMAN_ROUTED_FRACTION, AUTO_ROUTED_FRACTION, getRun, pct, pts } from '../data/measuredResults';
+import { ActiveLearningRound, DatasetItem, NavigationTab } from '../types';
+import { MEASURED_RUNS, getPoolRouting, getRun, pct, pts } from '../data/measuredResults';
 import { InteractiveRetrainingMesh3D } from './InteractiveRetrainingMesh3D';
 import {
   TrendingUp,
@@ -20,13 +20,16 @@ import {
 
 interface EvolutionImpactPageProps {
   rounds: ActiveLearningRound[];
+  datasetItems: DatasetItem[];
   setActiveTab: (tab: NavigationTab) => void;
 }
 
 export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
   rounds,
+  datasetItems,
   setActiveTab,
 }) => {
+  const routing = getPoolRouting(datasetItems);
   const [selectedRoundNum, setSelectedRoundNum] = useState<number>(rounds[rounds.length - 1]?.round ?? 0);
 
   const selectedRound = rounds.find((r) => r.round === selectedRoundNum) || rounds[rounds.length - 1];
@@ -182,7 +185,7 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
                     {r.mAP50}% <span className={`text-xs font-sans ${isSelected ? 'text-gray-400' : 'text-gray-500'}`}>mAP@50</span>
                   </div>
                   <p className={`text-[11px] font-mono ${isSelected ? 'text-gray-400' : 'text-gray-500'}`}>
-                    YOLOv8n &bull; {r.trainingImages.toLocaleString()} training images
+                    YOLOv8n &bull; ~{r.trainingImages.toLocaleString()} training images
                   </p>
                 </div>
 
@@ -295,7 +298,7 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
           <div className="space-y-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                Pool Routing ({POOL_ROUTING.poolImages} images)
+                Pool Routing ({routing.poolImages} images)
               </span>
               <span className="text-[10px] text-gray-500 font-bold">Priority threshold 0.58</span>
             </div>
@@ -304,22 +307,22 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
                 <div className="flex justify-between text-xs text-gray-600">
                   <span>Sent to human review</span>
                   <span className="font-mono font-bold text-gray-900">
-                    {pct(HUMAN_ROUTED_FRACTION)} ({POOL_ROUTING.sentToHuman} imgs)
+                    {pct(routing.humanFraction)} ({routing.sentToHuman} imgs)
                   </span>
                 </div>
                 <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: pct(HUMAN_ROUTED_FRACTION) }}></div>
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: pct(routing.humanFraction) }}></div>
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-gray-600">
                   <span>Routed to auto-labelling</span>
                   <span className="font-mono font-bold text-gray-900">
-                    {pct(AUTO_ROUTED_FRACTION)} ({POOL_ROUTING.autoLabeled} imgs)
+                    {pct(routing.autoFraction)} ({routing.autoLabeled} imgs)
                   </span>
                 </div>
                 <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: pct(AUTO_ROUTED_FRACTION) }}></div>
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: pct(routing.autoFraction) }}></div>
                 </div>
               </div>
               <p className="text-[11px] text-gray-500">
@@ -409,7 +412,7 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
                 <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>{pct(AUTO_ROUTED_FRACTION)} of pool routed (below priority 0.58)</span>
+                    <span>{pct(routing.autoFraction)} of pool routed (below priority 0.58)</span>
                   </div>
                 </td>
               </tr>
@@ -433,13 +436,13 @@ export const EvolutionImpactPage: React.FC<EvolutionImpactPageProps> = ({
                 <td className="px-4 py-3.5 text-gray-500">
                   <div className="flex items-center gap-2">
                     <X className="w-4 h-4 text-red-500 shrink-0" />
-                    <span>Everything ({POOL_ROUTING.poolImages} images, high fatigue)</span>
+                    <span>Everything ({routing.poolImages} images, high fatigue)</span>
                   </div>
                 </td>
                 <td className="px-4 py-3.5 text-emerald-700 font-bold bg-emerald-50/30 border-l border-emerald-100">
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>Only high-priority cases ({pct(HUMAN_ROUTED_FRACTION)})</span>
+                    <span>Only high-priority cases ({pct(routing.humanFraction)})</span>
                   </div>
                 </td>
               </tr>

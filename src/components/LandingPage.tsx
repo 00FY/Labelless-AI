@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { NavigationTab } from '../types';
+import { DatasetItem, NavigationTab } from '../types';
 import {
   MEASURED_RUNS,
-  POOL_ROUTING,
-  AUTO_ROUTED_FRACTION,
-  HUMAN_ROUTED_FRACTION,
   getRun,
   pct,
   pts,
+  getPoolRouting,
 } from '../data/measuredResults';
 import {
   CheckCircle2,
@@ -31,6 +29,7 @@ interface LandingPageProps {
   onStartAnnotation: () => void;
   onViewDemoDataset: () => void;
   setActiveTab: (tab: NavigationTab) => void;
+  datasetItems: DatasetItem[];
 }
 
 // Measured runs shown in the hero comparison (see src/data/measuredResults.ts)
@@ -40,7 +39,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onStartAnnotation,
   onViewDemoDataset,
   setActiveTab,
+  datasetItems,
 }) => {
+  const routing = getPoolRouting(datasetItems);
   const [selectedRun, setSelectedRun] = useState<number>(SHOWCASE_RUNS.length - 1);
   const currentRun = SHOWCASE_RUNS[selectedRun];
   const seedRun = getRun('seed');
@@ -86,7 +87,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           </div>
           <p className="text-xs font-mono text-gray-400 pt-2">
-            ✦ YOLOv8n · {pct(AUTO_ROUTED_FRACTION)} of pool auto-routed · {pct(getRun('labelless').mAP50)} mAP@50 after Round 1 (measured)
+            ✦ YOLOv8n · {pct(routing.autoFraction)} of pool auto-routed · {pct(getRun('labelless').mAP50)} mAP@50 after Round 1 (measured)
           </p>
         </div>
 
@@ -184,7 +185,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gray-200 text-gray-700">Every image</span>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-extrabold text-gray-900 font-mono">{POOL_ROUTING.poolImages} images</div>
+              <div className="text-3xl font-extrabold text-gray-900 font-mono">{routing.poolImages} images</div>
               <p className="text-xs text-gray-500">Every pool image goes to a human annotator.</p>
             </div>
             <ul className="space-y-1.5 text-xs text-gray-600 font-medium pt-2 border-t border-gray-200">
@@ -201,15 +202,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="p-6 rounded-2xl bg-emerald-950 text-white border border-emerald-800 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold uppercase text-emerald-400">LabelLess Active Pipeline</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">{pct(HUMAN_ROUTED_FRACTION)} to humans</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">{pct(routing.humanFraction)} to humans</span>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-extrabold text-emerald-400 font-mono">{POOL_ROUTING.sentToHuman} images</div>
+              <div className="text-3xl font-extrabold text-emerald-400 font-mono">{routing.sentToHuman} images</div>
               <p className="text-xs text-emerald-200/70">Only images above the priority threshold (0.58) reach a human.</p>
             </div>
             <ul className="space-y-1.5 text-xs text-emerald-100/90 font-medium pt-2 border-t border-emerald-800">
               <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400" /> {pct(AUTO_ROUTED_FRACTION)} routed to auto-labelling
+                <Check className="w-3.5 h-3.5 text-emerald-400" /> {pct(routing.autoFraction)} routed to auto-labelling
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-emerald-400" /> Humans review only what matters
@@ -362,12 +363,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="grid grid-cols-2 gap-2.5 text-xs font-mono">
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
                   <div className="text-[10px] text-sky-400 font-bold uppercase">01. INFER & FILTER</div>
-                  <div className="text-sm font-extrabold text-white">{pct(AUTO_ROUTED_FRACTION)} Auto</div>
+                  <div className="text-sm font-extrabold text-white">{pct(routing.autoFraction)} Auto</div>
                   <div className="text-[10px] text-slate-400">Priority below 0.58</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
                   <div className="text-[10px] text-amber-400 font-bold uppercase">02. VALUE TRIAGE</div>
-                  <div className="text-sm font-extrabold text-white">{pct(HUMAN_ROUTED_FRACTION)} Hard</div>
+                  <div className="text-sm font-extrabold text-white">{pct(routing.humanFraction)} Hard</div>
                   <div className="text-[10px] text-slate-400">Uncertain samples to human</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
@@ -427,7 +428,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="font-medium text-gray-500">mAP@50 after Round 1</div>
           </div>
           <div id="impact-card-autolabel" className="bg-gray-50 border border-gray-200 rounded-2xl p-8 hover:border-gray-300 transition-colors text-center space-y-2">
-            <div className="text-5xl font-extrabold text-gray-900">{pct(HUMAN_ROUTED_FRACTION)}</div>
+            <div className="text-5xl font-extrabold text-gray-900">{pct(routing.humanFraction)}</div>
             <div className="font-medium text-gray-500">Of pool routed to human review</div>
           </div>
         </div>

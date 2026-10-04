@@ -221,11 +221,11 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                   <div className="text-gray-900 font-semibold">Active Learning Policy:</div>
                   {currentSample.status === 'auto_labeled' ? (
                     <p>
-                      Confidence &ge; 85% with low embedding entropy. Bounding coordinates added directly to pseudo-labeled training corpus.
+                      Priority below the 0.58 review threshold. Predicted boxes kept as pseudo-labels for training.
                     </p>
                   ) : (
                     <p>
-                      Confidence &lt; 85% or rare class detected. Routed to high-priority review queue with calculated value score.
+                      Priority 0.58 or above (uncertainty, rarity and diversity combined). Routed to the human review queue.
                     </p>
                   )}
                 </div>

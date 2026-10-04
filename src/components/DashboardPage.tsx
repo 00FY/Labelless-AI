@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { ProjectConfig, DatasetItem, ActiveLearningRound, NavigationTab } from '../types';
 import {
   MEASURED_RUNS,
-  POOL_ROUTING,
-  AUTO_ROUTED_FRACTION,
-  HUMAN_ROUTED_FRACTION,
   getRun,
   pct,
   pts,
+  getPoolRouting,
 } from '../data/measuredResults';
 
 // Assumed manual review time per image, used only for the effort estimate
@@ -49,10 +47,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onSelectImage,
   onExplainItem,
 }) => {
+  const routing = getPoolRouting(datasetItems);
   const seedRun = getRun('seed');
   const labellessRun = getRun('labelless');
-  const hoursAll = (POOL_ROUTING.poolImages * MANUAL_SEC_PER_IMAGE) / 3600;
-  const hoursRouted = (POOL_ROUTING.sentToHuman * MANUAL_SEC_PER_IMAGE) / 3600;
+  const hoursAll = (routing.poolImages * MANUAL_SEC_PER_IMAGE) / 3600;
+  const hoursRouted = (routing.sentToHuman * MANUAL_SEC_PER_IMAGE) / 3600;
 
   const classCountMap: Record<string, number> = {};
   datasetItems.forEach((i) => {
@@ -525,12 +524,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500">Review every pool image ({POOL_ROUTING.poolImages}):</span>
+              <span className="text-gray-500">Review every pool image ({routing.poolImages}):</span>
               <span className="font-mono font-bold text-gray-700">{hoursAll.toFixed(1)} Hours</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-700 font-semibold">
-                Review only routed images ({POOL_ROUTING.sentToHuman}, {pct(HUMAN_ROUTED_FRACTION)}):
+                Review only routed images ({routing.sentToHuman}, {pct(routing.humanFraction)}):
               </span>
               <span className="font-mono font-bold text-gray-900">{hoursRouted.toFixed(1)} Hours</span>
             </div>
@@ -541,11 +540,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 Estimated Time Saved:
               </span>
               <span className="font-mono text-emerald-600 text-base">
-                {(hoursAll - hoursRouted).toFixed(1)} Hours ({pct(AUTO_ROUTED_FRACTION)})
+                {(hoursAll - hoursRouted).toFixed(1)} Hours ({pct(routing.autoFraction)})
               </span>
             </div>
             <p className="text-[11px] text-gray-500">
-              The accuracy of the {POOL_ROUTING.autoLabeled} auto-labelled images has not been audited yet.
+              The accuracy of the {routing.autoLabeled} auto-labelled images has not been audited yet.
             </p>
           </div>
 
