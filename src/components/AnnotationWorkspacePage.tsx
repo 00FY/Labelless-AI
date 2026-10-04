@@ -156,6 +156,66 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
 
   const timeSavedSeconds = Math.max(0, item.estimatedManualSec - (elapsedSec || item.aiAssistedSec));
 
+  // Drag-to-move state
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef<{
+    boxId: string;
+    startMouseX: number;
+    startMouseY: number;
+    startBoxX: number;
+    startBoxY: number;
+  } | null>(null);
+
+  const handleBoxMouseDown = (e: React.MouseEvent, box: BoundingBox) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Select the box on mousedown so it's immediately active
+    setSelectedBoxId(box.id);
+    setActiveClass(box.label);
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+
+    dragState.current = {
+      boxId: box.id,
+      startMouseX: ((e.clientX - rect.left) / rect.width) * 100,
+      startMouseY: ((e.clientY - rect.top) / rect.height) * 100,
+      startBoxX: box.x,
+      startBoxY: box.y,
+    };
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!dragState.current || !canvas) return;
+      const r = canvas.getBoundingClientRect();
+      const currentX = ((moveEvent.clientX - r.left) / r.width) * 100;
+      const currentY = ((moveEvent.clientY - r.top) / r.height) * 100;
+      const dx = currentX - dragState.current.startMouseX;
+      const dy = currentY - dragState.current.startMouseY;
+
+      setBoxes((prev) =>
+        prev.map((b) => {
+          if (b.id !== dragState.current!.boxId) return b;
+          return {
+            ...b,
+            x: Math.min(Math.max(dragState.current!.startBoxX + dx, 0), 100 - b.width),
+            y: Math.min(Math.max(dragState.current!.startBoxY + dy, 0), 100 - b.height),
+            isHumanCorrected: true,
+          };
+        })
+      );
+    };
+
+    const onMouseUp = () => {
+      dragState.current = null;
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
   return (
     <div id="annotation-workspace-root" className="space-y-8 pb-12">
       {/* Top Bar */}
@@ -223,7 +283,7 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT / CENTER: Interactive Bounding Box Canvas */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 aspect-video shadow-sm flex items-center justify-center select-none group">
+          <div ref={canvasRef} className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 aspect-video shadow-sm flex items-center justify-center select-none group">
             {/* Base Image */}
             <img
               src={item.imageUrl}
@@ -244,18 +304,14 @@ export const AnnotationWorkspacePage: React.FC<AnnotationWorkspaceProps> = ({
               return (
                 <div
                   key={box.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedBoxId(box.id);
-                    setActiveClass(box.label);
-                  }}
+                  onMouseDown={(e) => handleBoxMouseDown(e, box)}
                   style={{
                     left: `${box.x}%`,
                     top: `${box.y}%`,
                     width: `${box.width}%`,
                     height: `${box.height}%`,
                   }}
-                  className={`absolute cursor-pointer transition-all border-2 rounded-md ${
+                  className={`absolute cursor-move transition-[border,box-shadow,opacity] border-2 rounded-md ${
                     box.isHumanCorrected
                       ? 'border-emerald-500 bg-emerald-500/20'
                       : box.confidence >= 0.80
