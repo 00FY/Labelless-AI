@@ -223,18 +223,18 @@ def run_experiment(args):
     print(f"  -> Selected {len(selected)} images")
 
     # ---- Step 2: Generate/load human labels ----
-    print("\nLoading human labels...        ", end="")
+    print("Loading human labels...        ", end="")
 
     round_output = rounds_dir / f"round_{round_num}"
     human_labels_path = round_output / "human_labels.json"
     round_output.mkdir(parents=True, exist_ok=True)
 
-    if method == "labelless" and Path(args.human_labels).exists():
+    if getattr(args, "use_real_human_labels", False) and method == "labelless" and Path(args.human_labels).exists():
         # Use the actual human labels file
         shutil.copy2(args.human_labels, human_labels_path)
         print("[OK] (from real human labels)")
     else:
-        # Generate synthetic labels from ground truth
+        # Generate synthetic labels from ground truth for all selected pool images
         synthetic = generate_synthetic_human_labels(selected, gt_dir, pool_dir)
         with open(human_labels_path, "w", encoding="utf-8") as f:
             json.dump(synthetic, f, indent=2)
@@ -262,11 +262,19 @@ def run_experiment(args):
     # Determine base model
     if round_num == 0:
         base_model = "yolov8n.pt"
+    elif getattr(args, "base_model", None) and Path(args.base_model).exists():
+        base_model = args.base_model
+        print(f"\n  [INFO] Using specified base model: {base_model}")
     else:
+        round0_model = PROJECT_ROOT / "models/round_0/best.pt"
         prev_model = PROJECT_ROOT / f"models/round_{round_num - 1}/best.pt"
         finetuned_model = PROJECT_ROOT / "models/finetuned/weights/best.pt"
-        if prev_model.exists():
+        if round0_model.exists():
+            base_model = str(round0_model)
+            print(f"\n  [INFO] Using seed baseline model (round 0): {round0_model}")
+        elif prev_model.exists():
             base_model = str(prev_model)
+            print(f"\n  [INFO] Using previous round model: {prev_model}")
         elif round_num == 1 and finetuned_model.exists():
             base_model = str(finetuned_model)
             print(f"\n  [INFO] Using seed baseline model: {finetuned_model}")
@@ -394,6 +402,14 @@ def parse_args():
     parser.add_argument(
         "--ranked-queue", default=str(DEFAULT_RANKED_QUEUE),
         help=f"Path to ranked_queue.json (default: {DEFAULT_RANKED_QUEUE}).",
+    )
+    parser.add_argument(
+        "--base-model", default=None,
+        help="Optional path to base .pt model to finetune from.",
+    )
+    parser.add_argument(
+        "--use-real-human-labels", action="store_true",
+        help="Use inputs/human_labels.json directly instead of synthetic labels.",
     )
     parser.add_argument(
         "--human-labels", default=str(DEFAULT_HUMAN_LABELS),

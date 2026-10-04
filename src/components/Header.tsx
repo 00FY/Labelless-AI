@@ -62,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navLinks = [
     { id: 'dashboard', label: 'Dashboard' },
+    { id: 'evidence', label: 'Evidence & Benchmarks' },
     { id: 'landing', label: 'Features' },
     { id: 'queue', label: 'Review Queue' },
     { id: 'evolution', label: 'Model Impact' },

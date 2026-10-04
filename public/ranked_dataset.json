@@ -25,12 +25,11 @@
         "Active learning reason: No objects detected with sufficient confidence (high uncertainty)"
       ]
     },
-    "status": "auto_labeled",
+    "status": "pending",
     "boxes": [],
     "estimatedManualSec": 30,
     "aiAssistedSec": 8,
-    "createdAtRound": 1,
-    "humanReviewed": true
+    "createdAtRound": 1
   },
   {
     "id": "#0002",

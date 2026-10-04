@@ -135,6 +135,14 @@ def main():
     print_comparison_table(results)
     save_summary(results, summary_path)
 
+    # Automatically sync to public/experiment_results.json for UI consumption
+    try:
+        from export_experiment_results import main as export_main
+        export_main()
+    except Exception as exc:
+        print(f"  [WARN] Could not sync experiment_results.json: {exc}")
+
 
 if __name__ == "__main__":
     main()
+

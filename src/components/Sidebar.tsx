@@ -11,6 +11,7 @@ import {
   Download,
   Settings,
   Sparkles,
+  FileCheck2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -61,6 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       group: 'IMPROVEMENT',
       items: [
+        { id: 'evidence', label: 'Experiment Evidence', icon: FileCheck2, badge: 'Verified' },
         { id: 'evolution', label: 'Model Impact & Experiments', icon: TrendingUp, badge: effortSaved },
       ],
     },
@@ -134,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="mt-8 pt-4 border-t border-gray-200">
         <div className="px-3 flex flex-col gap-2">
           <div className="flex items-center justify-between text-sm text-gray-500 font-medium">
-            <span>mAP@50: <span className="text-gray-900 font-semibold">78.2%</span></span>
+            <span>mAP@50: <span className="text-gray-900 font-semibold">{currentMap}</span></span>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span className="text-xs uppercase tracking-wider text-gray-500">Online</span>
