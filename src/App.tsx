@@ -121,7 +121,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* Top Navigation Header */}
       <Header
         config={config}
@@ -143,7 +143,7 @@ export const App: React.FC = () => {
         />
 
         {/* Dynamic Page Content Stage */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50/50">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50">
           <div className="max-w-7xl mx-auto">
             {/* Loading state */}
             {isLoading && (

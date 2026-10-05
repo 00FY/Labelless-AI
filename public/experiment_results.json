@@ -1,8 +1,8 @@
 {
   "_generated_by": "scripts/export_experiment_results.py",
-  "_generated_at": "2026-10-04T14:48:29.157871+00:00",
+  "_generated_at": "2026-10-05T07:01:48.553669+00:00",
   "_do_not_edit": "This file is auto-generated. Edit config.yaml or run experiments to update it.",
-  "experiment_id": "labelless_ai_20261004",
+  "experiment_id": "labelless_ai_20261005",
   "setup": {
     "dataset": "Multi-Disaster Active Learning Dataset",
     "model": "yolov8n.pt",

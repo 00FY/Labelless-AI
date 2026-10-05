@@ -46,19 +46,19 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
   const currentSample = PIPELINE_STREAM_SAMPLES[currentIndex];
 
   return (
-    <div id="processing-page-root" className="space-y-8 pb-12 max-w-5xl mx-auto">
+    <div id="processing-page-root" className="space-y-8 pb-12 max-w-5xl mx-auto text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+          <div className="flex items-center gap-3 mb-1.5">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 tracking-tight">
               AI Annotation in Progress
             </h1>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+            <span className="px-2.5 py-1 rounded-md text-[10px] font-mono-code font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider animate-pulse">
               ● Replay of Processed Pool
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-slate-600 font-mono-code">
             Round {config.currentRound} &bull; Dataset: {config.datasetName} &bull; Model: {config.modelType} {config.modelVersion}
           </p>
         </div>
@@ -66,16 +66,16 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-xs font-semibold text-gray-700 flex items-center gap-1.5 transition-colors shadow-sm"
+            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-mono-code font-semibold text-slate-700 flex items-center gap-2 transition-colors shadow-xs cursor-pointer"
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            {isPlaying ? <Pause className="w-3.5 h-3.5 text-slate-500" /> : <Play className="w-3.5 h-3.5 text-emerald-600" />}
             <span>{isPlaying ? 'Pause Stream' : 'Resume'}</span>
           </button>
 
           <button
             id="jump-to-queue-btn"
             onClick={() => setActiveTab('queue')}
-            className="px-4 py-2 text-xs font-bold text-white bg-gray-900 hover:bg-gray-700 rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 text-xs font-bold font-mono-code text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-md transition-all flex items-center gap-2 uppercase tracking-wider cursor-pointer"
           >
             <span>Review Queue ({sentForReview.toLocaleString()})</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -84,21 +84,21 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
       </div>
 
       {/* Large Progress Bar */}
-      <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between text-xs font-mono font-bold">
-          <div className="flex items-center gap-2 text-gray-500">
-            <Cpu className="w-4 h-4 text-gray-400" />
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center justify-between text-xs font-mono-code font-bold">
+          <div className="flex items-center gap-2 text-slate-600">
+            <Cpu className="w-4 h-4 text-emerald-600" />
             <span>AI PROCESSING & ACTIVE INFERENCE PIPELINE</span>
           </div>
-          <span className="text-gray-900">
+          <span className="text-emerald-700 font-mono-code">
             {processedCount.toLocaleString()} / {totalImages.toLocaleString()} IMAGES ({((processedCount / totalImages) * 100).toFixed(1)}%)
           </span>
         </div>
 
         {/* Animated Bar */}
-        <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden p-0.5 border border-gray-200">
+        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
           <div
-            className="h-full bg-gray-400 rounded-full transition-all duration-500 relative"
+            className="h-full bg-gradient-to-r from-emerald-500 to-sky-400 rounded-full transition-all duration-500 relative"
             style={{ width: `${(processedCount / totalImages) * 100}%` }}
           >
             <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
@@ -107,39 +107,39 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
 
         {/* Live Statistics (4 Cards) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Processed</span>
-            <div className="text-xl font-extrabold font-mono text-gray-900">{processedCount.toLocaleString()}</div>
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest font-mono-code text-slate-500">Processed</span>
+            <div className="text-xl font-black font-mono-code text-slate-900">{processedCount.toLocaleString()}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Auto-Accepted</span>
-            <div className="text-xl font-extrabold font-mono text-emerald-700">{autoAccepted.toLocaleString()}</div>
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest font-mono-code text-emerald-700">Auto-Accepted</span>
+            <div className="text-xl font-black font-mono-code text-emerald-700">{autoAccepted.toLocaleString()}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-red-700">Sent to Review</span>
-            <div className="text-xl font-extrabold font-mono text-red-700">{sentForReview.toLocaleString()}</div>
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest font-mono-code text-amber-700">Sent to Review</span>
+            <div className="text-xl font-black font-mono-code text-amber-700">{sentForReview.toLocaleString()}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-center space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Skipped / Corrupt</span>
-            <div className="text-xl font-extrabold font-mono text-gray-500">{skipped}</div>
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest font-mono-code text-slate-500">Skipped / Corrupt</span>
+            <div className="text-xl font-black font-mono-code text-slate-500">{skipped}</div>
           </div>
         </div>
       </div>
 
-      {/* LIVE IMAGE STREAM PREVIEW (The core pitch visual for demo!) */}
+      {/* LIVE IMAGE STREAM PREVIEW */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2 section-label">
-            <Zap className="w-3.5 h-3.5 text-gray-400" />
+          <h2 className="text-xs font-bold uppercase tracking-widest font-mono-code text-emerald-700 flex items-center gap-2 section-label">
+            <Zap className="w-4 h-4 text-emerald-600" />
             Live Batch Stream & Routing Decisions
           </h2>
-          <span className="text-[11px] font-mono text-gray-500">Streaming Frame {currentIndex + 1} of {PIPELINE_STREAM_SAMPLES.length}</span>
+          <span className="text-[11px] font-mono-code text-slate-500">Frame {currentIndex + 1} of {PIPELINE_STREAM_SAMPLES.length}</span>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSample.id}
@@ -150,7 +150,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
             >
               {/* Image Preview with Bounding Box Overlay */}
-              <div className="md:col-span-6 relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 aspect-video flex items-center justify-center shadow-sm">
+              <div className="md:col-span-6 relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video flex items-center justify-center shadow-md">
                 <img
                   src={
                     currentSample.class === 'Damaged Building'
@@ -169,13 +169,13 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                 <div
                   className={`absolute inset-6 border-2 ${
                     currentSample.status === 'auto_labeled'
-                      ? 'border-emerald-500 bg-emerald-500/10'
-                      : 'border-dashed border-red-500 bg-red-500/10'
+                      ? 'border-emerald-400 bg-emerald-500/10'
+                      : 'border-dashed border-amber-400 bg-amber-500/10'
                   } rounded-lg flex items-start justify-start p-2`}
                 >
                   <div
-                    className={`px-2 py-0.5 rounded text-xs font-mono font-bold text-white shadow flex items-center gap-1 ${
-                      currentSample.status === 'auto_labeled' ? 'bg-emerald-600' : 'bg-red-600'
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono-code font-bold text-white shadow-xs flex items-center gap-1 ${
+                      currentSample.status === 'auto_labeled' ? 'bg-emerald-600' : 'bg-amber-600'
                     }`}
                   >
                     <span>{currentSample.class}</span>
@@ -183,7 +183,7 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                   </div>
                 </div>
 
-                <div className="absolute top-3 right-3 px-2 py-1 rounded bg-white/80 backdrop-blur-md text-[11px] font-mono text-gray-700 border border-gray-200 shadow-sm">
+                <div className="absolute top-3 right-3 px-2.5 py-1 rounded bg-white/90 backdrop-blur-md text-[10px] font-mono-code text-slate-900 border border-slate-200 shadow-xs font-semibold">
                   {currentSample.id}
                 </div>
               </div>
@@ -191,40 +191,40 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
               {/* Status & Routing Decision Card */}
               <div className="md:col-span-6 space-y-4">
                 <div>
-                  <div className="text-xs text-gray-500 font-mono mb-1">{currentSample.id} &bull; {currentSample.name}</div>
-                  <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
-                    Class: <span className="text-gray-600">{currentSample.class}</span>
+                  <div className="text-xs text-slate-500 font-mono-code mb-1">{currentSample.id} &bull; {currentSample.name}</div>
+                  <h3 className="text-xl font-bold font-display text-slate-900 flex items-center gap-2">
+                    Class: <span className="text-emerald-700">{currentSample.class}</span>
                   </h3>
                 </div>
 
                 {/* Status Badge */}
                 <div
-                  className={`p-4 rounded-xl border ${currentSample.status === 'auto_labeled' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-red-200 bg-red-50 text-red-900'} space-y-2`}
+                  className={`p-4 rounded-xl border ${currentSample.status === 'auto_labeled' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900'} space-y-2`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold font-mono tracking-wider flex items-center gap-1.5">
-                      <span className={currentSample.status === 'auto_labeled' ? 'text-emerald-700' : 'text-red-700'}>{currentSample.icon}</span>
+                    <span className="text-xs font-bold font-mono-code tracking-wider flex items-center gap-2">
+                      <span className={currentSample.status === 'auto_labeled' ? 'text-emerald-600' : 'text-amber-600'}>{currentSample.icon}</span>
                       <span>{currentSample.statusText}</span>
                     </span>
-                    <span className="text-xs font-mono font-bold">
+                    <span className="text-xs font-mono-code font-bold">
                       Confidence: {(currentSample.conf * 100).toFixed(0)}%
                     </span>
                   </div>
 
-                  <div className={`text-xs ${currentSample.status === 'auto_labeled' ? 'text-emerald-800' : 'text-red-800'}`}>
-                    <strong>Routing Reason:</strong> {currentSample.reason}
+                  <div className={`text-xs ${currentSample.status === 'auto_labeled' ? 'text-emerald-800' : 'text-amber-800'}`}>
+                    <strong className="font-mono-code">Routing Reason:</strong> {currentSample.reason}
                   </div>
                 </div>
 
                 {/* Active Learning Explanation */}
-                <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-600 space-y-1">
-                  <div className="text-gray-900 font-semibold">Active Learning Policy:</div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
+                  <div className="text-slate-900 font-semibold font-mono-code">Active Learning Policy:</div>
                   {currentSample.status === 'auto_labeled' ? (
-                    <p>
+                    <p className="text-slate-600">
                       Priority below the 0.58 review threshold. Predicted boxes kept as pseudo-labels for training.
                     </p>
                   ) : (
-                    <p>
+                    <p className="text-slate-600">
                       Priority 0.58 or above (uncertainty, rarity and diversity combined). Routed to the human review queue.
                     </p>
                   )}
@@ -234,14 +234,14 @@ export const ProcessingPage: React.FC<ProcessingPageProps> = ({
                   {currentSample.status !== 'auto_labeled' && (
                     <button
                       onClick={() => setActiveTab('workspace')}
-                      className="px-4 py-2 text-xs font-bold text-white bg-gray-900 hover:bg-gray-700 rounded-xl transition-all shadow-sm"
+                      className="px-4 py-2.5 text-xs font-bold font-mono-code text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-md uppercase tracking-wider cursor-pointer"
                     >
-                      Annotate This Frame Now →
+                      Annotate This Frame Now &rarr;
                     </button>
                   )}
                   <button
                     onClick={() => setActiveTab('queue')}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-300 transition-colors shadow-sm"
+                    className="px-4 py-2.5 text-xs font-mono-code font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-colors shadow-xs cursor-pointer"
                   >
                     View All Queued Images
                   </button>

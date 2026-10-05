@@ -217,18 +217,18 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
   };
 
   return (
-    <div id="export-page-root" className="space-y-8 pb-12 max-w-5xl mx-auto">
+    <div id="export-page-root" className="space-y-8 pb-12 max-w-5xl mx-auto text-slate-900">
       {/* Header */}
-      <div className="border-b border-gray-200 pb-5">
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+      <div className="border-b border-slate-200 pb-6">
+        <div className="flex items-center gap-3 mb-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 tracking-tight">
             Export Dataset & Model Checkpoints
           </h1>
-          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 text-gray-600 border border-gray-200">
+          <span className="px-2.5 py-1 rounded-md text-[10px] font-mono-code font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
             Production Output
           </span>
         </div>
-        <p className="text-xs sm:text-sm text-gray-500">
+        <p className="text-xs sm:text-sm text-slate-600">
           Export verified annotations in standardized computer vision formats or export retrained PyTorch / ONNX weights.
         </p>
       </div>
@@ -237,38 +237,38 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
         {/* Left Column: Configuration */}
         <div className="lg:col-span-6 space-y-6">
           {/* Dataset Ingestion Summary */}
-          <div className="p-6 rounded-2xl bg-white border border-gray-200 space-y-4 shadow-sm">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 section-label">
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold font-mono-code uppercase tracking-widest text-slate-500 section-label">
               Dataset Manifest ({datasetItems.length.toLocaleString()} Images)
             </h3>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-200">
-                <span className="flex items-center gap-2 text-emerald-700 font-semibold">
-                  <CheckCircle2 className="w-4 h-4" />
+            <div className="space-y-2.5 text-xs">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="flex items-center gap-2 text-emerald-700 font-semibold font-mono-code">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   Auto-Labeled (&gt;85% Conf)
                 </span>
-                <span className="font-mono font-bold text-gray-900">
+                <span className="font-mono-code font-bold text-slate-900">
                   {totalAuto.toLocaleString()} images
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-200">
-                <span className="flex items-center gap-2 text-gray-700 font-semibold">
-                  <CheckCircle2 className="w-4 h-4" />
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="flex items-center gap-2 text-sky-700 font-semibold font-mono-code">
+                  <CheckCircle2 className="w-4 h-4 text-sky-600" />
                   Human-Reviewed & Corrected
                 </span>
-                <span className="font-mono font-bold text-gray-900">
+                <span className="font-mono-code font-bold text-slate-900">
                   {totalHuman.toLocaleString()} images
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-200">
-                <span className="flex items-center gap-2 text-gray-500 font-semibold">
-                  <Layers className="w-4 h-4" />
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="flex items-center gap-2 text-slate-600 font-semibold font-mono-code">
+                  <Layers className="w-4 h-4 text-slate-400" />
                   Pending / Queued
                 </span>
-                <span className="font-mono font-bold text-gray-500">
+                <span className="font-mono-code font-bold text-slate-600">
                   {totalPending.toLocaleString()} images
                 </span>
               </div>
@@ -276,12 +276,12 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
           </div>
 
           {/* Export Format Selection */}
-          <div className="p-6 rounded-2xl bg-white border border-gray-200 space-y-4 shadow-sm">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 section-label">
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold font-mono-code uppercase tracking-widest text-slate-500 section-label">
               Export Annotation Format
             </h3>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               {[
                 { id: 'human_labels', label: 'human_labels.json', desc: 'Person D Retrain Pipeline' },
                 { id: 'yolo', label: 'YOLOv8 (.txt)', desc: 'Ultralytics PyTorch / Darknet' },
@@ -291,51 +291,51 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id as any)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                     format === f.id
-                      ? 'bg-gray-50 border-gray-900 text-gray-900 shadow-sm'
-                      : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'bg-slate-50 border-emerald-500 ring-1 ring-emerald-200 text-slate-900 shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
                   }`}
                 >
-                  <div className="text-xs font-bold">{f.label}</div>
-                  <div className="text-[10px] text-gray-500">{f.desc}</div>
+                  <div className="text-xs font-bold font-mono-code text-slate-900">{f.label}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">{f.desc}</div>
                 </button>
               ))}
             </div>
 
             {/* Inclusions Filter Checkboxes */}
-            <div className="space-y-2 pt-4 border-t border-gray-100">
-              <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 section-label">
+            <div className="space-y-3 pt-4 border-t border-slate-200">
+              <label className="text-xs font-bold font-mono-code uppercase tracking-widest text-slate-500 section-label">
                 Include in Export:
               </label>
 
-              <div className="space-y-1.5 text-xs">
-                <label className="flex items-center gap-2.5 text-gray-700 cursor-pointer">
+              <div className="space-y-2 text-xs">
+                <label className="flex items-center gap-2.5 text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includeHumanVerified}
                     onChange={(e) => setIncludeHumanVerified(e.target.checked)}
-                    className="rounded bg-white border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="rounded bg-slate-50 border-slate-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
                   />
                   <span>Human verified & corrected ground truth ({totalHuman.toLocaleString()})</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2.5 text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includeHighConfPseudo}
                     onChange={(e) => setIncludeHighConfPseudo(e.target.checked)}
-                    className="rounded bg-white border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="rounded bg-slate-50 border-slate-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
                   />
                   <span>High-confidence AI pseudo-labels ({totalAuto.toLocaleString()})</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 text-gray-500 cursor-pointer">
+                <label className="flex items-center gap-2.5 text-slate-500 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includeLowConf}
                     onChange={(e) => setIncludeLowConf(e.target.checked)}
-                    className="rounded bg-white border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="rounded bg-slate-50 border-slate-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
                   />
                   <span>Low-confidence raw predictions (Not recommended)</span>
                 </label>
@@ -343,12 +343,12 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
             </div>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
               <button
                 id="download-dataset-btn"
                 onClick={handleDownloadDataset}
                 disabled={isExporting}
-                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs text-white bg-gray-900 hover:bg-gray-800 shadow-sm transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs text-white bg-slate-900 hover:bg-slate-800 shadow-md transition-all flex items-center justify-center gap-2 font-mono-code uppercase tracking-wider cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>{isExporting ? 'Packaging Archive...' : 'Export Dataset Archive'}</span>
@@ -359,48 +359,48 @@ export const ExportPage: React.FC<ExportPageProps> = ({ config, datasetItems }) 
 
         {/* Right Column: Code & File Preview */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-gray-400" />
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 section-label">
-                  Export Payload Preview ({format.toUpperCase()})
+                <FileCode className="w-4 h-4 text-emerald-600" />
+                <h3 className="text-xs font-bold font-mono-code uppercase tracking-widest text-slate-500 section-label">
+                  Payload Preview ({format.toUpperCase()})
                 </h3>
               </div>
 
               <button
                 onClick={handleCopy}
-                className="px-2.5 py-1 rounded-lg bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold border border-gray-200 flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono-code border border-slate-200 flex items-center gap-2 transition-colors cursor-pointer shadow-xs"
               >
-                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600 font-bold" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                 <span>{isCopied ? 'Copied!' : 'Copy Code'}</span>
               </button>
             </div>
 
-            <pre className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-[11px] font-mono text-gray-700 overflow-x-auto max-h-[300px] leading-relaxed shadow-inner">
-              {format === 'coco' ? getCocoPreview() : getYoloPreview()}
+            <pre className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono-code text-emerald-400 overflow-x-auto max-h-[320px] leading-relaxed shadow-inner scrollbar-thin">
+              {getActivePreview()}
             </pre>
           </div>
 
           {/* NEW COMING SOON CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-            <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm space-y-2 relative overflow-hidden flex flex-col justify-between">
-              <div className="absolute top-2 right-2 bg-gray-100 text-gray-500 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Coming Soon</div>
-              <h4 className="text-xs font-bold text-gray-900 pr-12">Export to ONNX</h4>
-              <p className="text-[10px] text-gray-500">Optimized weights for cross-platform inference</p>
+            <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2 relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-2.5 right-2.5 bg-slate-100 text-slate-500 text-[9px] font-mono-code font-bold px-2 py-0.5 rounded uppercase tracking-wider">Soon</div>
+              <h4 className="text-xs font-bold font-mono-code text-slate-900 pr-10">Export ONNX</h4>
+              <p className="text-[10px] text-slate-500">Cross-platform hardware inference format</p>
             </div>
             
-            <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm space-y-2 relative overflow-hidden flex flex-col justify-between">
-              <div className="absolute top-2 right-2 bg-gray-100 text-gray-500 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Coming Soon</div>
-              <h4 className="text-xs font-bold text-gray-900 pr-12">Export to TFLite</h4>
-              <p className="text-[10px] text-gray-500">Mobile-ready model format</p>
+            <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2 relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-2.5 right-2.5 bg-slate-100 text-slate-500 text-[9px] font-mono-code font-bold px-2 py-0.5 rounded uppercase tracking-wider">Soon</div>
+              <h4 className="text-xs font-bold font-mono-code text-slate-900 pr-10">Export TFLite</h4>
+              <p className="text-[10px] text-slate-500">Mobile edge & Android runtime model</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm space-y-2 flex flex-col justify-between cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-colors" onClick={handleDownloadModel}>
-              <Cpu className="w-4 h-4 text-gray-400" />
+            <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2 flex flex-col justify-between cursor-pointer hover:border-emerald-500/50 hover:bg-slate-50 transition-all group" onClick={handleDownloadModel}>
+              <Cpu className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
               <div>
-                <h4 className="text-xs font-bold text-gray-900">best.pt Weights</h4>
-                <p className="text-[10px] text-gray-500">Download active round PyTorch checkpoint</p>
+                <h4 className="text-xs font-bold font-mono-code text-slate-900">best.pt Weights</h4>
+                <p className="text-[10px] text-slate-500">Download active PyTorch checkpoint</p>
               </div>
             </div>
           </div>
